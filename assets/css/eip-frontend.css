@@ -1,0 +1,12 @@
+/*CSS goes here*/
+
+/*for webp*/
+picture {
+    display: block;
+    width: 100%;
+}
+
+picture img {
+    width: 100%;
+    height: auto;
+}

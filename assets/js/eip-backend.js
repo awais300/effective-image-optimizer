@@ -1,0 +1,382 @@
+/*Tooltip*/
+(function($) {
+    $(document).ready(function() {
+        // Add tooltip container to body if it doesn't exist
+        if (!$('.awp-tooltip').length) {
+            $('body').append('<div class="awp-tooltip" style="display: none;"></div>');
+        }
+
+        // Handle hover events
+        $('.thumbnail-stats').hover(
+            function(e) { // mouseenter
+                var thumbnails = JSON.parse($(this).attr('data-thumbnails'));
+                var tooltipContent = generateTooltipContent(thumbnails);
+
+                $('.awp-tooltip')
+                    .html(tooltipContent)
+                    .css({
+                        position: 'absolute',
+                        top: e.pageY + 10,
+                        left: e.pageX + 10
+                    })
+                    .show();
+            },
+            function() { // mouseleave
+                $('.awp-tooltip').hide();
+            }
+        ).mousemove(function(e) {
+            // Move tooltip with cursor
+            $('.awp-tooltip').css({
+                top: e.pageY + 10,
+                left: e.pageX + 10
+            });
+        });
+
+        function generateTooltipContent(thumbnails) {
+            var content = '';
+            thumbnails.forEach(function(thumb) {
+                content += '<div class="thumb-stats">';
+                content += '<span class="size">' + thumb.size + '</span>';
+                content += '<div class="progress-wrapper">';
+                content += '<div class="progress-bar" style="width: ' + thumb.percent + '%"></div>';
+                content += '</div>';
+                content += '<span class="percent">' + thumb.percent + '%</span>';
+                content += '</div>';
+            });
+            return content;
+        }
+    });
+})(jQuery);
+
+/*Setting Tabs*/
+jQuery(document).ready(function($) {
+    // Check the URL fragment to determine the initial tab, default to #general
+    var initialTab = window.location.hash || '#general';
+
+    // Set up tabs and content sections
+    $('.nav-tab').removeClass('nav-tab-active');
+    $('.tab-content').hide();
+
+    // Activate the initial tab based on the URL fragment
+    var $initialTab = $(`.nav-tab[href="${initialTab}"]`);
+    $initialTab.addClass('nav-tab-active');
+    $(initialTab).show();
+
+    // Show or hide the submit button based on the initial tab
+    if (initialTab === '#optimization') {
+        $('#submit').hide();
+    } else {
+        $('#submit').show();
+    }
+
+    // Event listener for tab clicks
+    $('.nav-tab').on('click', function(event) {
+        event.preventDefault();
+
+        // Update active tab styling
+        $('.nav-tab').removeClass('nav-tab-active');
+        $(this).addClass('nav-tab-active');
+
+        // Hide all tab content sections
+        $('.tab-content').hide();
+
+        // Show the target tab content
+        var target = $(this).attr('href');
+        $(target).show();
+
+        // Update the URL fragment to reflect the active tab
+        window.location.hash = target;
+
+        // Hide or show the submit button based on the opened tab
+        if (target === '#optimization') {
+            $('#submit').hide();
+        } else {
+            $('#submit').show();
+        }
+    });
+
+    // Trigger a click on the initial tab to ensure it's fully activated
+    $initialTab.trigger('click');
+});
+
+/*Batch Image Optimization*/
+jQuery(document).ready(function($) {
+    const startButton = $('#start-optimization-button');
+    const progressBar = $('#progress-bar');
+    const progressText = $('#progress-text');
+    const resultsList = $('#optimization-results');
+    const progressContainer = $('#progress-container');
+    const spinner = $('.progress-status');
+
+    let isOptimizing = false;
+    let totalOptimized = 0;
+    let totalErrors = 0;
+
+    startButton.on('click', function(event) {
+        event.preventDefault();
+
+        if (isOptimizing) {
+            return;
+        }
+
+        // Reset state
+        isOptimizing = true;
+        totalOptimized = 0;
+        totalErrors = 0;
+        startButton.prop('disabled', true);
+        progressContainer.show();
+        resultsList.empty().show();
+        spinner.show();
+
+        processNextBatch();
+    });
+
+    function updateProgress(progress, message) {
+        progressBar.css('width', progress + '%');
+        progressText.text(message);
+    }
+
+    function addResultMessage(result) {
+        const statusClass = result.status === 'success' ? 'success' : 'error';
+        const messageHtml = `
+            <div class="optimization-result ${statusClass}">
+                <span class="dashicons dashicons-${result.status === 'success' ? 'yes' : 'no'}"></span>
+                ID ${result.id}: ${result.message}
+            </div>
+        `;
+        resultsList.append(messageHtml);
+        resultsList.scrollTop(resultsList[0].scrollHeight);
+    }
+
+    function processNextBatch() {
+        $.ajax({
+            url: wpeio_data.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'start_optimization',
+                nonce: wpeio_data.nonce
+            },
+            success: function(response) {
+                if (!response.success) {
+                    handleError('Server returned an error: ' + (response.data?.message || 'Unknown error'));
+                    return;
+                }
+
+                const data = response.data;
+
+                // Process results
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(result => {
+                        if (result.status === 'success') {
+                            totalOptimized++;
+                        } else {
+                            totalErrors++;
+                        }
+                        addResultMessage(result);
+                    });
+                }
+
+                // Update progress message
+                const progressMessage = `Optimized: ${totalOptimized} | Errors: ${totalErrors} | Progress: ${data.progress}%`;
+                updateProgress(data.progress, progressMessage);
+
+                // Continue if not complete
+                if (!data.is_complete) {
+                    // Add a small delay between batches
+                    setTimeout(processNextBatch, 1000);
+                } else {
+                    finishOptimization(data.message || `Optimization complete! Successfully optimized ${totalOptimized} images with ${totalErrors} errors.`);
+                }
+            },
+            error: function(xhr, status, error) {
+                handleError('Ajax request failed: ' + error);
+            }
+        });
+    }
+
+    function handleError(message) {
+        isOptimizing = false;
+        startButton.prop('disabled', false);
+        updateProgress(0, 'Error: ' + message);
+        spinner.hide();
+        addResultMessage({
+            id: 'system',
+            status: 'error',
+            message: message
+        });
+    }
+
+    function finishOptimization(message) {
+        isOptimizing = false;
+        startButton.prop('disabled', false);
+        updateProgress(100, message);
+        spinner.hide();
+    }
+});
+
+
+/*Single image optimization and restore on media listing page*/
+(function($) {
+    'use strict';
+
+    $(document).ready(function() {
+        function handleOptimizationAction($button, action) {
+            const $container = $button.closest('.optimization-controls');
+            const attachmentId = $container.data('id');
+
+            if ($container.hasClass('processing')) {
+                return;
+            }
+
+            $container.addClass('processing');
+            $button.prop('disabled', true);
+
+            $.ajax({
+                url: wpeio_data.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: action,
+                    attachment_id: attachmentId,
+                    nonce: wpeio_data.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Reload the page to show updated status
+                        window.location.reload();
+                    } else {
+                        alert(response.data.message || wpeio_data.i18n.error);
+                    }
+                },
+                error: function() {
+                    alert(wpeio_data.i18n.networkError);
+                },
+                complete: function() {
+                    $container.removeClass('processing');
+                    $button.prop('disabled', false);
+                }
+            });
+        }
+
+        // Optimize image button handler
+        $(document).on('click', '.optimization-controls .optimize-image', function(e) {
+            e.preventDefault();
+            handleOptimizationAction($(this), 'optimize_single_image');
+        });
+
+        // Restore image button handler
+        $(document).on('click', '.optimization-controls .restore-image', function(e) {
+            e.preventDefault();
+            handleOptimizationAction($(this), 'restore_single_image');
+        });
+    });
+})(jQuery);
+
+
+
+/*Stats*/
+jQuery(document).ready(function($) {
+    $('#stats-progress-container').hide();
+    $('#stats-display').hide();
+
+    let statsInterval;
+
+    $('#get-stats-button').on('click', function() {
+        $(this).prop('disabled', true);
+        startProcessing();
+    });
+
+    function startProcessing() {
+        $.ajax({
+            url: wpeio_data.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'awp_process_stats',
+                nonce: wpeio_data.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    updateUI(response.data);
+                    if (response.data.status === 'processing') {
+                        startPolling();
+                    }
+                }
+            }
+        });
+    }
+
+    function startPolling() {
+    if (statsInterval) {
+        clearInterval(statsInterval);
+    }
+    statsInterval = setInterval(checkStatus, 2000); // Increased interval to 2 seconds
+}
+
+
+    function checkStatus() {
+    $.ajax({
+        url: wpeio_data.ajaxUrl,
+        type: 'POST',
+        data: {
+            action: 'awp_get_stats_status',
+            nonce: wpeio_data.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                updateUI(response.data);
+
+                // Stop polling if processing is complete or no more processing needed
+                if (response.data.status === 'completed' || !response.data.has_more) {
+                    clearInterval(statsInterval);
+                    $('#get-stats-button').prop('disabled', false);
+                }
+            }
+        },
+        error: function() {
+            clearInterval(statsInterval);
+            $('#get-stats-button').prop('disabled', false);
+        }
+    });
+}
+
+    function updateUI(data) {
+    // Show progress container when processing
+    $('#stats-progress-container').toggle(data.status === 'processing');
+    
+    if (data.status === 'processing') {
+        $('#stats-progress').html(
+            `Processing: ${data.progress.processed} of ${data.progress.total} images (${data.progress.percentage}%)`
+        );
+        $('.stat-progress-bar').css('width', `${data.progress.percentage}%`)
+            .attr('aria-valuenow', data.progress.percentage);
+    }
+
+    if (data.status === 'completed') {
+        $('#stats-progress-container').hide();
+        $('#stats-display').show();
+        $('#get-stats-button').prop('disabled', false);
+    }
+
+    // Always update stats
+    if (data.stats) {
+        displayStats(data.stats);
+    }
+}
+
+    function displayStats(stats) {
+        $('#webp-savings').text(formatBytes(stats.total_webp_savings));
+        $('#normal-savings').text(formatBytes(stats.total_normal_savings));
+        $('#webp-conversions').text(stats.webp_conversions);
+        $('#png-jpg-conversions').text(stats.png_to_jpg_conversions);
+
+        // Add total optimized images to the stats display
+        $('#total-optimized-images').text(stats.total_optimized || 0);
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});

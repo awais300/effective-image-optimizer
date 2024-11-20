@@ -1,0 +1,13 @@
+{
+    "name": "awp/effective-image-optimizer",
+    "license": "GPL-3.0",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "AWP\\IO\\": "src/"
+        },
+        "files": [
+            "includes/functions.php"
+        ]
+    }
+}
