@@ -20,7 +20,7 @@ class JpgHandler
         $attachment_id = attachment_url_to_postid($image_url);
         if ($attachment_id) {
             // Check optimization data
-            $optimization_data = get_post_meta($attachment_id, 'awp_io_optimization_data', true);
+            $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
             if (empty($optimization_data)) {
                 return false;
             }
