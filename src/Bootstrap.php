@@ -104,10 +104,14 @@ class Bootstrap
 		new MediaLibraryOptimizer();
 		StatsHandler::get_instance();
 
+		new JpgHandler();
+
 		$setting_deliver_next_gen_images = get_optimizer_settings('deliver_next_gen_images');
 		if($setting_deliver_next_gen_images === 'yes') {
 			new WebpHandler();
 		}
+
+
 	}
 
 	/**
