@@ -14,33 +14,70 @@ use AWP\IO\Singleton;
 defined('ABSPATH') || exit;
 
 /**
- * Class ImageOptimizerOptions
- * @package AWP\IO\ImageOptimizer
+ * Handles the admin settings page and options management for the Image Optimizer plugin.
+ *
+ * This class manages all functionality related to the plugin's settings page in the WordPress admin area,
+ * including saving and retrieving options, handling AJAX optimization requests, and rendering the settings interface.
+ *
+ * @package AWP\IO\Admin
+ * @since 1.0.0
  */
 class ImageOptimizerOptions extends Singleton
 {
 
     /**
-     * The template loader.
+     * The template loader instance.
      *
-     * @var loader
+     * @var TemplateLoader
+     * @since 1.0.0
      */
     private $loader = null;
 
+    /**
+     * Image fetcher instance for retrieving images.
+     *
+     * @var ImageFetcher
+     * @since 1.0.0
+     */
     private $fetcher;
+
+    /**
+     * Image sender instance for processing images.
+     *
+     * @var ImageSender
+     * @since 1.0.0
+     */
     private $sender;
+
+    /**
+     * Image tracker instance for monitoring optimization status.
+     *
+     * @var ImageTracker
+     * @since 1.0.0
+     */
     private $tracker;
+
+    /**
+     * Optimization manager instance.
+     *
+     * @var OptimizationManager
+     * @since 1.0.0
+     */
     private $optimization_manager;
 
     /**
-     * Contains settings.
+     * Option name for storing plugin settings in WordPress options table.
      *
-     * @var IMAGE_OPTIMIZER_SETTINGS
+     * @var string
+     * @since 1.0.0
      */
     private const IMAGE_OPTIMIZER_SETTINGS = 'wpeio_awp_settings';
 
     /**
-     * Default settings.
+     * Default plugin settings.
+     *
+     * @var array
+     * @since 1.0.0
      */
     private $default_settings = array(
         'api_key' => '',
@@ -60,7 +97,9 @@ class ImageOptimizerOptions extends Singleton
     );
 
     /**
-     * Construct the ImageOptimizerOptions class.
+     * Constructor. Initializes template loader and required service instances.
+     *
+     * @since 1.0.0
      */
     public function __construct()
     {
@@ -71,6 +110,12 @@ class ImageOptimizerOptions extends Singleton
         $this->tracker = ImageTracker::get_instance();
     }
 
+    /**
+     * Initializes WordPress hooks and filters for the admin interface.
+     *
+     * @since 1.0.0
+     * @return void
+     */
     public function initialize_hooks()
     {
         add_action('admin_menu', array($this, 'admin_menu'));
@@ -80,10 +125,11 @@ class ImageOptimizerOptions extends Singleton
     }
 
     /**
-     * Retrieve the optimizer settings or a specific setting by name.
+     * Retrieves optimizer settings or a specific setting by name.
      *
-     * @param string|null $name Name of the specific setting to retrieve, or null for all settings.
-     * @return mixed The requested setting, all settings if no name is provided, or WP_Error if the setting is missing.
+     * @since 1.0.0
+     * @param string|null $name Optional. Name of the specific setting to retrieve.
+     * @return mixed The requested setting value, all settings if no name provided, or WP_Error if setting is invalid.
      */
     public function get_optimizer_settings($name = null)
     {
@@ -107,24 +153,25 @@ class ImageOptimizerOptions extends Singleton
         }
     }
 
-
-    public function get_default_optimizer_settings() {
+    /**
+     * Returns the default optimizer settings.
+     *
+     * @since 1.0.0
+     * @return array Array of default settings
+     */
+    public function get_default_optimizer_settings()
+    {
         return $this->default_settings;
     }
 
     /**
-     * Reset settings to defaults.
+     * Handles the AJAX request to start the optimization process.
+     * 
+     * Performs security checks, initializes optimization manager, and processes images in batches.
+     * Returns JSON response with progress information.
      *
-     * @return bool Whether the option was reset to defaults.
-     */
-    public function reset_optimizer_settings()
-    {
-        return update_option(self::IMAGE_OPTIMIZER_SETTINGS, $this->default_settings);
-    }
-
-
-    /**
-     * Handle the AJAX request to start the optimization process.
+     * @since 1.0.0
+     * @return void Sends JSON response and exits
      */
     public function start_optimization()
     {
@@ -140,7 +187,6 @@ class ImageOptimizerOptions extends Singleton
         }
 
         $manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
-
 
         $total_unoptimized = $this->fetcher->get_total_unoptimized_count();
 
@@ -179,7 +225,10 @@ class ImageOptimizerOptions extends Singleton
     }
 
     /**
-     * Initialize settings with defaults if not set.
+     * Initializes plugin settings with defaults if not already set.
+     *
+     * @since 1.0.0
+     * @return void
      */
     function initialize_settings()
     {
@@ -189,7 +238,10 @@ class ImageOptimizerOptions extends Singleton
     }
 
     /**
-     * Registers a new settings page under Settings.
+     * Registers the plugin settings page in WordPress admin menu.
+     *
+     * @since 1.0.0
+     * @return void
      */
     function admin_menu()
     {
@@ -203,7 +255,10 @@ class ImageOptimizerOptions extends Singleton
     }
 
     /**
-     * Settings page display callback.
+     * Renders the settings page template with current settings data.
+     *
+     * @since 1.0.0
+     * @return void
      */
     function settings_page()
     {
@@ -222,7 +277,12 @@ class ImageOptimizerOptions extends Singleton
     }
 
     /**
-     * Save settings.
+     * Processes and saves the submitted settings form data.
+     * 
+     * Validates nonce, user capabilities, and sanitizes all input values before saving.
+     *
+     * @since 1.0.0
+     * @return void
      */
     function save_settings()
     {
@@ -257,17 +317,27 @@ class ImageOptimizerOptions extends Singleton
         exit;
     }
 
+    /**
+     * Sanitizes yes/no input values.
+     *
+     * @since 1.0.0
+     * @param string $input Input value to sanitize
+     * @return string 'yes' if input is 'yes', 'no' otherwise
+     */
     function sanitize_yes_no($input)
     {
         return $input === 'yes' ? 'yes' : 'no';
     }
 
+    /**
+     * Sanitizes cover/contain resize option values.
+     *
+     * @since 1.0.0
+     * @param string $input Input value to sanitize
+     * @return string 'cover' or 'contain' based on input, defaults to 'cover'
+     */
     function sanitize_cover_contain($input)
     {
         return in_array($input, array('cover', 'contain'), true) ? $input : 'cover';
     }
 }
-
-
-
-

@@ -8,17 +8,86 @@ use AWP\IO\ImageTracker;
 use AWP\IO\OptimizationManager;
 use WP_CLI;
 
+/**
+ * Command-line interface for the Image Optimizer plugin.
+ *
+ * Provides WP-CLI commands for batch optimization of images in the WordPress media library.
+ * Supports various options like batch processing, dry runs, and verbose output.
+ *
+ * @package AWP\IO\CLI
+ * @since 1.0.0
+ */
 class ImageOptimizerCLI
 {
+    /**
+     * Image fetcher service instance.
+     *
+     * @var ImageFetcher
+     * @since 1.0.0
+     */
     private $fetcher;
+
+    /**
+     * Image sender service instance.
+     *
+     * @var ImageSender
+     * @since 1.0.0
+     */
     private $sender;
+
+    /**
+     * Image tracker service instance.
+     *
+     * @var ImageTracker
+     * @since 1.0.0
+     */
     private $tracker;
+
+    /**
+     * Optimization manager instance.
+     *
+     * @var OptimizationManager
+     * @since 1.0.0
+     */
     private $optimization_manager;
+
+    /**
+     * Total bytes saved across all optimized images.
+     *
+     * @var int
+     * @since 1.0.0
+     */
     private $total_saved_bytes = 0;
+
+    /**
+     * Count of successfully processed images.
+     *
+     * @var int
+     * @since 1.0.0
+     */
     private $processed_images = 0;
+
+    /**
+     * Count of failed image optimizations.
+     *
+     * @var int
+     * @since 1.0.0
+     */
     private $failed_images = 0;
+
+    /**
+     * Whether to show detailed output for each image.
+     *
+     * @var bool
+     * @since 1.0.0
+     */
     private $verbose = false;
 
+    /**
+     * Constructor. Initializes required service instances.
+     *
+     * @since 1.0.0
+     */
     public function __construct()
     {
 
@@ -26,7 +95,6 @@ class ImageOptimizerCLI
         $sender = new ImageSender();
         $tracker = new ImageTracker();
         $optimization_manager = new OptimizationManager($fetcher, $sender, $tracker);
-
 
         $this->fetcher = $fetcher;
         $this->sender = $sender;
@@ -155,6 +223,16 @@ class ImageOptimizerCLI
         }
     }
 
+    /**
+     * Processes the optimization result for a single image.
+     *
+     * Handles the optimization data for an image and its thumbnails, updating statistics
+     * and displaying progress information based on verbose mode setting.
+     *
+     * @since 1.0.0
+     * @param array $result Optimization result data
+     * @return void
+     */
     private function process_optimization_result($result)
     {
         // Get optimization data from post meta
@@ -215,6 +293,15 @@ class ImageOptimizerCLI
         }
     }
 
+    /**
+     * Displays final optimization statistics.
+     *
+     * Shows a summary of the optimization process including total images processed,
+     * failed optimizations, and total space saved.
+     *
+     * @since 1.0.0
+     * @return void
+     */
     private function display_final_stats()
     {
         // Convert bytes to more readable format
@@ -233,6 +320,16 @@ class ImageOptimizerCLI
         }
     }
 
+    /**
+     * Formats bytes into human readable format.
+     *
+     * Converts bytes into appropriate size units (GB, MB, KB, or bytes)
+     * with proper rounding.
+     *
+     * @since 1.0.0
+     * @param int $bytes Number of bytes to format
+     * @return string Formatted size string with units
+     */
     private function format_bytes($bytes)
     {
         if ($bytes >= 1073741824) {

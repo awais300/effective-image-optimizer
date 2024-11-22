@@ -2,8 +2,27 @@
 
 namespace AWP\IO;
 
+/**
+ * Handles WebP image conversion and delivery in WordPress.
+ * 
+ * This class manages WebP image support, including browser detection,
+ * image conversion, and dynamic serving of WebP images when supported.
+ * It hooks into WordPress's image handling system to provide seamless
+ * WebP support.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class WebpHandler
 {
+    /**
+     * Initialize WebP handling functionality.
+     * 
+     * Sets up hooks for content filtering, image URL modification,
+     * and WebP support in WordPress.
+     * 
+     * @since 1.0.0
+     */
     public function __construct()
     {
         // Hook into HTML output to replace image URLs
@@ -19,7 +38,14 @@ class WebpHandler
     }
 
     /**
-     * Check if browser supports WebP
+     * Check if the current browser supports WebP images.
+     * 
+     * Examines the HTTP_ACCEPT header to determine if the client
+     * browser supports WebP image format.
+     * 
+     * @since 1.0.0
+     * @access private
+     * @return bool True if browser supports WebP, false otherwise
      */
     private function browser_supports_webp()
     {
@@ -32,7 +58,12 @@ class WebpHandler
     }
 
     /**
-     * Check if WebP version exists for a given image URL - Filesystem
+     * Legacy method to check for WebP version of an image.
+     * 
+     * @deprecated since 1.0.0 Use get_webp_version() instead
+     * @access private
+     * @param string $image_url URL of the original image
+     * @return string|false WebP image URL if exists, false otherwise
      */
     private function get_webp_version_old($image_url)
     {
@@ -51,7 +82,15 @@ class WebpHandler
     }
 
     /**
-     * Check if WebP version exists for a given image URL - Database
+     * Check if a WebP version exists for a given image URL.
+     * 
+     * First checks the attachment metadata for WebP support flag,
+     * then falls back to filesystem check if necessary.
+     * 
+     * @since 1.0.0
+     * @access private
+     * @param string $image_url URL of the original image
+     * @return string|false WebP image URL if exists, false otherwise
      */
     private function get_webp_version($image_url)
     {
@@ -80,7 +119,15 @@ class WebpHandler
     }
 
     /**
-     * Replace image URLs in content with WebP versions
+     * Replace image URLs in content with WebP versions.
+     * 
+     * Searches content for image tags and replaces them with picture
+     * elements containing both WebP and original sources when WebP
+     * versions are available.
+     * 
+     * @since 1.0.0
+     * @param string $content The post content to process
+     * @return string Modified content with WebP images
      */
     public function replace_images_with_webp($content)
     {
@@ -117,7 +164,18 @@ class WebpHandler
     }
 
     /**
-     * Modify image source sets to include WebP versions
+     * Modify image source sets to include WebP versions.
+     * 
+     * Updates the srcset attribute of images to use WebP versions
+     * when available.
+     * 
+     * @since 1.0.0
+     * @param array  $sources      Array of image sources with descriptors
+     * @param array  $size_array   Array of width and height values
+     * @param string $image_src    The 'src' of the image
+     * @param array  $image_meta   The image meta data
+     * @param int    $attachment_id The image attachment ID
+     * @return array Modified array of image sources
      */
     public function modify_image_srcset($sources, $size_array, $image_src, $image_meta, $attachment_id)
     {
@@ -136,7 +194,17 @@ class WebpHandler
     }
 
     /**
-     * Maybe return WebP URL for attachment image
+     * Conditionally return WebP URL for attachment images.
+     * 
+     * Checks if a WebP version exists and returns it instead of
+     * the original image URL when appropriate.
+     * 
+     * @since 1.0.0
+     * @param array|false $image         Array of image data, or false
+     * @param int         $attachment_id Attachment ID
+     * @param string|array $size        Requested image size
+     * @param bool        $icon         Whether the image should be treated as an icon
+     * @return array|false Modified image data array or false
      */
     public function maybe_get_webp_url($image, $attachment_id, $size, $icon)
     {
@@ -153,7 +221,11 @@ class WebpHandler
     }
 
     /**
-     * Add WebP to allowed mime types
+     * Add WebP to WordPress's allowed mime types.
+     * 
+     * @since 1.0.0
+     * @param array $mimes Array of allowed mime types
+     * @return array Modified array of mime types
      */
     public function add_webp_mime_type($mimes)
     {
@@ -162,7 +234,12 @@ class WebpHandler
     }
 
     /**
-     * Add WebP headers
+     * Add WebP-related HTTP headers.
+     * 
+     * Adds headers to indicate WebP support and vary cache based on
+     * Accept header.
+     * 
+     * @since 1.0.0
      */
     public function add_webp_headers()
     {

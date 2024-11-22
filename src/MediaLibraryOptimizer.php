@@ -2,9 +2,28 @@
 
 namespace AWP\IO;
 
+/**
+ * Manages image optimization functionality in the WordPress Media Library.
+ *
+ * This class handles the integration of image optimization features into the WordPress
+ * Media Library interface, including:
+ * - Adding optimization controls to media grid and modal views
+ * - Handling AJAX requests for image optimization and restoration
+ * - Displaying optimization statistics
+ * - Auto-optimizing images on upload
+ * - Managing backup images
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class MediaLibraryOptimizer
 {
 
+    /**
+     * Constructor. Sets up WordPress hooks for media library integration.
+     *
+     * @since 1.0.0
+     */
     public function __construct()
     {
         add_action('delete_attachment', [$this, 'delete_backup_image']);
@@ -21,6 +40,13 @@ class MediaLibraryOptimizer
         add_action('add_attachment', [$this, 'optimize_on_new_upload']);
     }
 
+    /**
+     * Automatically optimizes newly uploaded images if enabled in settings.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id The ID of the newly uploaded attachment
+     * @return void
+     */
     public function optimize_on_new_upload($attachment_id)
     {
         $setting_optimize_media_upload = get_optimizer_settings('optimize_media_upload');
@@ -49,7 +75,16 @@ class MediaLibraryOptimizer
 
 
     /**
-     * Add optimization fields to media modal
+     * Adds optimization fields to the media modal attachment details.
+     *
+     * Displays optimization controls and statistics in the media modal when
+     * viewing image details. Includes buttons for optimization/restoration
+     * and displays optimization statistics if the image is already optimized.
+     *
+     * @since 1.0.0
+     * @param array $form_fields Array of form fields for attachment
+     * @param WP_Post $post The attachment post object
+     * @return array Modified form fields array
      */
     public function add_optimization_fields($form_fields, $post)
     {
@@ -116,18 +151,43 @@ class MediaLibraryOptimizer
         return $form_fields;
     }
 
+    /**
+     * Deletes the backup copy of an image when the attachment is deleted.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id The ID of the attachment being deleted
+     * @return void
+     */
     public function delete_backup_image($attachment_id)
     {
         $tracker = new ImageTracker();
         $tracker->delete_backup_image($attachment_id);
     }
 
+    /**
+     * Adds an optimization status column to the media library grid view.
+     *
+     * @since 1.0.0
+     * @param array $columns Array of column names
+     * @return array Modified array of column names
+     */
     public function add_optimization_column($columns)
     {
         $columns['image_optimization'] = __('Image Optimization', 'awp-io');
         return $columns;
     }
 
+    /**
+     * Renders the content for the optimization status column.
+     *
+     * Displays optimization controls and statistics for each image in the
+     * media library grid view.
+     *
+     * @since 1.0.0
+     * @param string $column_name Name of the current column
+     * @param int $attachment_id ID of the current attachment
+     * @return void
+     */
     public function render_optimization_column($column_name, $attachment_id)
     {
         if ($column_name !== 'image_optimization') {
@@ -165,6 +225,14 @@ class MediaLibraryOptimizer
         <?php
     }
 
+    /**
+     * Legacy method for getting optimization statistics.
+     *
+     * @deprecated 1.1.0 Use get_optimization_stats() instead
+     * @since 1.0.0
+     * @param array $optimization_data Array of optimization data
+     * @return string HTML markup for optimization statistics
+     */
     private function get_optimization_stats_old($optimization_data)
     {
         if (empty($optimization_data)) {
@@ -213,6 +281,19 @@ class MediaLibraryOptimizer
     }
 
 
+    /**
+     * Generates HTML markup for displaying optimization statistics.
+     *
+     * Calculates and displays:
+     * - Overall size reduction percentage
+     * - WebP conversion status and savings
+     * - JPEG conversion status
+     * - Thumbnail optimization statistics
+     *
+     * @since 1.1.0
+     * @param array $optimization_data Array of optimization data for all image sizes
+     * @return string HTML markup for optimization statistics
+     */
     private function get_optimization_stats($optimization_data)
     {
         if (empty($optimization_data)) {
@@ -320,6 +401,15 @@ class MediaLibraryOptimizer
     }
 
 
+    /**
+     * Handles AJAX request for single image optimization.
+     *
+     * Validates the request, checks permissions, and processes the optimization
+     * request for a single image attachment.
+     *
+     * @since 1.0.0
+     * @return void Sends JSON response and exits
+     */
     public function handle_single_image_optimization()
     {
         check_ajax_referer('start_optimization_nonce', 'nonce');
@@ -365,6 +455,15 @@ class MediaLibraryOptimizer
         }
     }
 
+    /**
+     * Handles AJAX request for restoring an optimized image.
+     *
+     * Validates the request, checks permissions, and processes the restoration
+     * of an image to its original, unoptimized state.
+     *
+     * @since 1.0.0
+     * @return void Sends JSON response and exits
+     */
     public function handle_image_restore()
     {
         check_ajax_referer('start_optimization_nonce', 'nonce');

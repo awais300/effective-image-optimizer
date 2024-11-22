@@ -2,22 +2,62 @@
 
 namespace AWP\IO;
 
+/**
+ * ImageFetcher Class
+ *
+ * Handles retrieval and management of images from the WordPress media library
+ * for optimization purposes. Provides methods to fetch both optimized and
+ * unoptimized images in batches.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class ImageFetcher extends Singleton
 {
+    /**
+     * WordPress database instance
+     *
+     * @var \wpdb
+     */
     private $db;
+
+    /**
+     * Number of images to process in each batch
+     *
+     * @var int
+     */
     private $batch_size = 1;
 
+    /**
+     * Constructor.
+     *
+     * Initializes the database connection.
+     */
     public function __construct()
     {
         global $wpdb;
         $this->db = $wpdb;
     }
 
+    /**
+     * Get the current batch size setting.
+     *
+     * @since 1.0.0
+     * @return int Current batch size
+     */
     public function get_batch_size()
     {
         return $this->batch_size;
     }
 
+    /**
+     * Get total count of unoptimized images.
+     *
+     * Queries the database to count all image attachments that haven't been optimized yet.
+     *
+     * @since 1.0.0
+     * @return int Number of unoptimized images
+     */
     public function get_total_unoptimized_count()
     {
         return (int) $this->db->get_var("
@@ -30,7 +70,15 @@ class ImageFetcher extends Singleton
         ");
     }
 
-    // Modified to remove offset and simply get next batch of unoptimized images
+    /**
+     * Get next batch of unoptimized images.
+     *
+     * Retrieves a batch of image attachments that haven't been optimized,
+     * limited by the batch size setting.
+     *
+     * @since 1.0.0
+     * @return array Array of attachment IDs for unoptimized images
+     */
     public function get_unoptimized_images()
     {
         $query = $this->db->prepare(
@@ -50,10 +98,16 @@ class ImageFetcher extends Singleton
         return $this->db->get_col($query);
     }
 
-     /**
-     * Get total number of optimized images
+    /**
+     * Get total number of optimized images.
+     *
+     * Counts all image attachments that have been successfully optimized.
+     *
+     * @since 1.0.0
+     * @return int Number of optimized images
      */
-    public function get_total_optimized_images_count() {
+    public function get_total_optimized_images_count() 
+    {
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
             FROM {$this->db->posts} p
@@ -66,9 +120,16 @@ class ImageFetcher extends Singleton
     }
 
     /**
-     * Check if there are any unoptimized images
+     * Check for existence of unoptimized images.
+     *
+     * Efficiently checks if there are any remaining unoptimized images
+     * in the media library.
+     *
+     * @since 1.0.0
+     * @return bool True if unoptimized images exist, false otherwise
      */
-    public function has_unoptimized_images() {
+    public function has_unoptimized_images() 
+    {
         $count = (int) $this->db->get_var("
             SELECT COUNT(p.ID)
             FROM {$this->db->posts} p
@@ -84,6 +145,16 @@ class ImageFetcher extends Singleton
         return $count > 0;
     }
 
+    /**
+     * Get all image sizes for a specific attachment.
+     *
+     * Retrieves paths to all available sizes of an image attachment,
+     * including the original, full-size, and generated thumbnails.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id WordPress attachment ID
+     * @return array Array of image information including paths and size types
+     */
     public function get_attachment_images($attachment_id)
     {
         $images = [];

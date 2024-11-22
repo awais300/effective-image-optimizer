@@ -1,8 +1,26 @@
 <?php
 namespace AWP\IO;
 
+/**
+ * Handles JPEG image conversion and delivery in WordPress.
+ * 
+ * This class manages the conversion of PNG images to JPEG format when appropriate,
+ * providing automatic format switching and optimization. It hooks into WordPress's
+ * image handling system to serve JPEG versions of PNG images when available.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class JpgHandler 
 {
+    /**
+     * Initialize JPEG handling functionality.
+     * 
+     * Sets up hooks for content filtering and image URL modification
+     * to handle JPEG conversion and delivery.
+     * 
+     * @since 1.0.0
+     */
     public function __construct()
     {
         // Hook into HTML output to replace image URLs
@@ -12,7 +30,16 @@ class JpgHandler
     }
 
     /**
-     * Check if JPG version exists for a given image URL - Database
+     * Check if a JPEG version exists for a given image URL.
+     * 
+     * First checks the attachment metadata for conversion data,
+     * then falls back to filesystem check if necessary. Also considers
+     * WebP delivery settings to avoid conflicts.
+     *
+     * @since 1.0.0
+     * @access private
+     * @param string $image_url URL of the original image
+     * @return string|false JPEG image URL if exists, false otherwise
      */
     private function get_jpg_version($image_url)
     {
@@ -57,7 +84,14 @@ class JpgHandler
     }
 
     /**
-     * Replace image URLs in content with JPG versions
+     * Replace PNG image URLs in content with JPEG versions.
+     * 
+     * Searches content for PNG image tags and replaces them with
+     * JPEG versions when available.
+     *
+     * @since 1.0.0
+     * @param string $content The post content to process
+     * @return string Modified content with JPEG images where applicable
      */
     public function replace_images_with_jpg($content)
     {
@@ -80,7 +114,18 @@ class JpgHandler
     }
 
     /**
-     * Modify image source sets to include JPG versions
+     * Modify image source sets to include JPEG versions.
+     * 
+     * Updates the srcset attribute of PNG images to use JPEG versions
+     * when available.
+     *
+     * @since 1.0.0
+     * @param array  $sources      Array of image sources with descriptors
+     * @param array  $size_array   Array of width and height values
+     * @param string $image_src    The 'src' of the image
+     * @param array  $image_meta   The image meta data
+     * @param int    $attachment_id The image attachment ID
+     * @return array Modified array of image sources
      */
     public function modify_image_srcset($sources, $size_array, $image_src, $image_meta, $attachment_id)
     {
@@ -98,7 +143,17 @@ class JpgHandler
     }
 
     /**
-     * Maybe return JPG URL for attachment image
+     * Conditionally return JPEG URL for attachment images.
+     * 
+     * Checks if a JPEG version exists for PNG images and returns it
+     * instead of the original PNG URL when appropriate.
+     *
+     * @since 1.0.0
+     * @param array|false $image         Array of image data, or false
+     * @param int         $attachment_id Attachment ID
+     * @param string|array $size        Requested image size
+     * @param bool        $icon         Whether the image should be treated as an icon
+     * @return array|false Modified image data array or false
      */
     public function maybe_get_jpg_url($image, $attachment_id, $size, $icon)
     {

@@ -2,13 +2,58 @@
 
 namespace AWP\IO;
 
+/**
+ * Manages the image optimization process for WordPress media library images.
+ *
+ * This class coordinates the optimization workflow between image fetching,
+ * optimization processing, and tracking. It handles both batch and single image
+ * optimization processes, including WebP conversion and image resizing.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class OptimizationManager extends Singleton
 {
+    /**
+     * Image fetcher service instance.
+     *
+     * @var ImageFetcher
+     * @since 1.0.0
+     */
     private $fetcher;
+
+    /**
+     * Image sender service instance.
+     *
+     * @var ImageSender
+     * @since 1.0.0
+     */
     private $sender;
+
+    /**
+     * Image tracker service instance.
+     *
+     * @var ImageTracker
+     * @since 1.0.0
+     */
     private $tracker;
+
+    /**
+     * Counter for processed images in current batch.
+     *
+     * @var int
+     * @since 1.0.0
+     */
     private $processed_count = 0;
 
+    /**
+     * Constructor. Initializes required service instances.
+     *
+     * @since 1.0.0
+     * @param ImageFetcher $fetcher Image fetcher service instance
+     * @param ImageSender $sender Image sender service instance
+     * @param ImageTracker $tracker Image tracker service instance
+     */
     public function __construct(ImageFetcher $fetcher, ImageSender $sender, ImageTracker $tracker)
     {
         $this->fetcher = $fetcher;
@@ -16,12 +61,26 @@ class OptimizationManager extends Singleton
         $this->tracker = $tracker;
     }
 
+    /**
+     * Gets the count of processed images in current batch.
+     *
+     * @since 1.0.0
+     * @return int Number of processed images
+     */
     public function get_processed_count()
     {
         return $this->processed_count;
     }
 
-    // Modified to remove offset parameter
+    /**
+     * Optimizes a batch of unoptimized images from the media library.
+     *
+     * Processes multiple images in a single batch, handling optimization,
+     * WebP conversion, and metadata updates for each image and its thumbnails.
+     *
+     * @since 1.0.0
+     * @return array Array of optimization results for each processed image
+     */
     public function optimize_batch()
     {
         $attachment_ids = $this->fetcher->get_unoptimized_images();
@@ -57,10 +116,14 @@ class OptimizationManager extends Singleton
     }
 
     /**
-     * Optimize a single image
+     * Optimizes a single image from the media library.
      *
-     * @param int $attachment_id
-     * @return array
+     * Processes a specific image attachment, handling optimization,
+     * WebP conversion, and metadata updates for the image and its thumbnails.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id WordPress attachment ID to optimize
+     * @return array Optimization result containing status and message
      */
     public function optimize_single_image($attachment_id)
     {
@@ -87,6 +150,21 @@ class OptimizationManager extends Singleton
         }
     }
 
+    /**
+     * Processes optimization results and updates image files and metadata.
+     *
+     * Handles the optimization results for an image and its thumbnails, including:
+     * - Saving optimized images
+     * - Creating WebP versions
+     * - Updating image dimensions
+     * - Converting PNG to JPG if requested
+     * - Updating WordPress attachment metadata
+     *
+     * @since 1.0.0
+     * @param int $attachment_id WordPress attachment ID
+     * @param array $results Array of optimization results for each image size
+     * @return void
+     */
     private function process_optimization_results($attachment_id, $results)
     {
         $optimization_data = [];

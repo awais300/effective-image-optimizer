@@ -1,10 +1,15 @@
 <?php
 /**
  * Plugin Name: Effective Image Optimizer
- * Description: Plugin description
+ * Plugin URI: https://awaiswp.is-a-fullstack.dev/
+ * Description: Optimize and compress images in WordPress media library efficiently
  * Author: Muhammad Awais
  * Author URI: https://awaiswp.is-a-fullstack.dev/contact/
  * Version: 1.0.0
+ * Requires at least: 5.0
+ * Requires PHP: 7.2
+ * License: GPL v3 or later
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +24,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
+ * @package AWP\IO
+ * @author Muhammad Awais
+ * @version 1.0.0
  */
 
 namespace AWP\IO;
@@ -27,16 +35,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
+// Define plugin constants
 if ( ! defined( 'EIP_CUST_PLUGIN_FILE' ) ) {
     define( 'EIP_CUST_PLUGIN_FILE', __FILE__ );
 }
 
+// Autoload plugin classes
 require_once 'vendor/autoload.php';
 
+// Initialize the plugin
 Bootstrap::get_instance();
-
-function dd($mix) {
-	echo "<pre>";
-	print_r($mix);
-	echo "</pre>";
-}

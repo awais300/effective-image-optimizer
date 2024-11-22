@@ -2,20 +2,69 @@
 
 namespace AWP\IO;
 
+/**
+ * ImageSender Class
+ *
+ * Handles the communication with the remote optimization server.
+ * Responsible for sending images and receiving optimization results.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class ImageSender extends Singleton
 {
+    /**
+     * Remote optimization server URL
+     *
+     * @var string
+     */
     private $remote_url;
-    private $api_key;
 
+    /**
+     * API key for authentication with the remote server
+     *
+     * @var string
+     */
+    private $api_key = null;
+
+    /**
+     * Constructor.
+     *
+     * Initializes the remote URL and API key for the optimization service.
+     */
     public function __construct()
     {
-        /*$this->remote_url = $remote_url;
-        $this->api_key = $api_key;*/
-
         $this->remote_url = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/optimize';
-        $this->api_key = 'AFDAFUA*R#KRAFK';
     }
 
+    /**
+     * Retrieves the API key for the optimization service.
+     * 
+     * Lazily loads the API key from settings when first needed
+     * to avoid circular dependencies during initialization.
+     * 
+     * @since 1.0.0
+     * @access private
+     * @return string|null The API key if set, null otherwise
+     */
+    private function get_api_key() {
+        if ($this->api_key === null) {
+            $this->api_key = get_optimizer_settings('api_key');
+        }
+        return $this->api_key;
+    }
+
+    /**
+     * Send multiple images for optimization.
+     *
+     * Processes a batch of images associated with a specific attachment,
+     * sending each one to the remote optimization server.
+     *
+     * @since 1.0.0
+     * @param int   $attachment_id WordPress attachment ID
+     * @param array $images        Array of image data to process
+     * @return array Array of optimization results or error messages
+     */
     public function send_images($attachment_id, $images)
     {
         $results = [];
@@ -35,6 +84,18 @@ class ImageSender extends Singleton
         return $results;
     }
 
+    /**
+     * Send a single image for optimization.
+     *
+     * Handles the actual HTTP communication with the remote server for
+     * a single image, including file reading and multipart form data creation.
+     *
+     * @since 1.0.0
+     * @param int   $attachment_id WordPress attachment ID
+     * @param array $image         Image data including path and type
+     * @return array Optimization result from the server
+     * @throws \Exception When file operations fail or server communication errors occur
+     */
     private function send_single_image($attachment_id, $image)
     {
         if (!file_exists($image['path'])) {
@@ -102,14 +163,13 @@ class ImageSender extends Singleton
         $payload .= 'Content-Disposition: form-data; name="settings"' . "\r\n\r\n";
         $payload .= $settings . "\r\n";
 
-
         $payload .= "--" . $boundary . "--\r\n";
 
         // Prepare the request
         $args = [
             'timeout' => 60, // Increase timeout for large files
             'headers' => [
-                'X-AWP-IO-API-Key' => $this->api_key,
+                'X-AWP-IO-API-Key' => $this->get_api_key(),
                 'X-AWP-IO-Site-URL' => get_site_url(),
                 'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
                 'Content-Length' => strlen($payload),

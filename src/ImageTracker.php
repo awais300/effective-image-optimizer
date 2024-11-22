@@ -2,10 +2,30 @@
 
 namespace AWP\IO;
 
+/**
+ * ImageTracker Class
+ *
+ * Manages tracking and backup functionality for optimized images.
+ * Handles creating backups, restoring original images, and cleaning up
+ * when images are deleted from the media library.
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
 class ImageTracker extends Singleton
 {
+    /**
+     * WordPress database instance
+     *
+     * @var \wpdb
+     */
     private $db;
 
+    /**
+     * Constructor.
+     *
+     * Initializes the database connection and sets up hooks for attachment deletion.
+     */
     public function __construct()
     {
         global $wpdb;
@@ -14,12 +34,31 @@ class ImageTracker extends Singleton
         add_action('delete_attachment', [$this, 'delete_backup_image']);
     }
 
+    /**
+     * Mark an image as optimized.
+     *
+     * Updates post meta to indicate that an image has been optimized
+     * and stores the optimization data.
+     *
+     * @since 1.0.0
+     * @param int   $attachment_id    The ID of the attachment
+     * @param array $optimization_data Data about the optimization process
+     */
     public function mark_as_optimized($attachment_id, $optimization_data)
     {
         update_post_meta($attachment_id, '_awp_io_optimized', true);
         update_post_meta($attachment_id, '_awp_io_optimization_data', $optimization_data);
     }
 
+    /**
+     * Create a backup of the original image.
+     *
+     * Creates a backup copy of the original image in a dedicated backup directory,
+     * maintaining the same directory structure as the original.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id The ID of the attachment to backup
+     */
     public function create_backup($attachment_id)
     {
         //$file_path = get_attached_file($attachment_id);
@@ -45,6 +84,16 @@ class ImageTracker extends Singleton
         update_post_meta($attachment_id, '_awp_io_backup_path', $relative_backup_path);
     }
 
+    /**
+     * Restore an image from backup.
+     *
+     * Restores the original image from backup, regenerates thumbnails,
+     * and removes optimization meta data.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id The ID of the attachment to restore
+     * @return bool True if restore successful, false otherwise
+     */
     public function restore_image($attachment_id)
     {
         $relative_backup_path = get_post_meta($attachment_id, '_awp_io_backup_path', true);
@@ -70,10 +119,13 @@ class ImageTracker extends Singleton
     }
 
     /**
-     * Delete backup image when an attachment is deleted from media library
+     * Delete backup image when an attachment is deleted.
      *
+     * Removes the backup file and associated meta data when an image
+     * is deleted from the media library.
+     *
+     * @since 1.0.0
      * @param int $attachment_id The ID of the attachment being deleted
-     * @return void
      */
     public function delete_backup_image($attachment_id)
     {

@@ -1,4 +1,17 @@
-<?php if (!defined('ABSPATH')) exit; ?>
+<?php
+/**
+ * Admin settings page template for the Effective Image Optimizer plugin.
+ * 
+ * This template renders the admin settings interface with three main sections:
+ * 1. General Settings - Basic configuration including API key and backup options
+ * 2. Advanced Settings - Advanced features like WebP conversion
+ * 3. Optimization Settings - Batch optimization controls and statistics
+ *
+ * @package AWP\IO
+ * @since 1.0.0
+ */
+
+if (!defined('ABSPATH')) exit; ?>
 
 <div class="wrap">
     <h1><?php _e('Image Optimizer Settings', 'text-domain'); ?></h1>
