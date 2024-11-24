@@ -19,6 +19,7 @@ if (!defined('ABSPATH')) exit; ?>
         <a href="#general" class="nav-tab nav-tab-active"><?php _e('General', 'text-domain'); ?></a>
         <a href="#advanced" class="nav-tab"><?php _e('Advanced', 'text-domain'); ?></a>
         <a href="#optimization" class="nav-tab"><?php _e('Optimization', 'text-domain'); ?></a>
+        <a href="#bulk-restore" class="nav-tab"><?php _e('Bulk Restore', 'text-domain'); ?></a>
     </h2>
 
     <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
@@ -208,6 +209,31 @@ if (!defined('ABSPATH')) exit; ?>
                 </div>
             </div>
 
+        </div>
+        <!-- Bulk Restore Tab -->
+        <div id="bulk-restore" class="tab-content" style="display: none;">
+            <div class="optimization-container">
+                <h3><?php _e('Bulk Restore Images', 'text-domain'); ?></h3>
+                <p><?php _e('Click the button below to restore all optimized images to their original versions.', 'text-domain'); ?></p>
+                
+                <button id="start-restore-button" class="button button-primary">
+                    <?php _e('Start Restore', 'text-domain'); ?>
+                </button>
+
+                <div id="restore-progress-container" class="progress-section" style="display: none;">
+                    <div class="progress-status">
+                        <span class="spinner is-active"></span>
+                        <span id="restore-status-text">Restoring images...</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="restore-progress-bar" class="progress-bar" role="progressbar" 
+                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div id="restore-progress-text" class="progress-text"></div>
+                </div>
+
+                <div id="restore-results" class="results-container" style="display: none;"></div>
+            </div>
         </div>
 
         <?php submit_button(); ?>
