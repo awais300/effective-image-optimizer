@@ -18,6 +18,37 @@ namespace AWP\IO;
  */
 class MediaLibraryOptimizer
 {
+    /**
+     * Image fetcher instance for retrieving images.
+     *
+     * @var ImageFetcher
+     * @since 1.0.0
+     */
+    private $fetcher;
+
+    /**
+     * Image sender instance for processing images.
+     *
+     * @var ImageSender
+     * @since 1.0.0
+     */
+    private $sender;
+
+    /**
+     * Image tracker instance for monitoring optimization status.
+     *
+     * @var ImageTracker
+     * @since 1.0.0
+     */
+    private $tracker;
+
+    /**
+     * Optimization manager instance.
+     *
+     * @var OptimizationManager
+     * @since 1.0.0
+     */
+    private $optimization_manager;
 
     /**
      * Constructor. Sets up WordPress hooks for media library integration.
@@ -26,6 +57,10 @@ class MediaLibraryOptimizer
      */
     public function __construct()
     {
+        $this->fetcher = ImageFetcher::get_instance();
+        $this->sender = ImageSender::get_instance();
+        $this->tracker = ImageTracker::get_instance();
+
         add_action('delete_attachment', [$this, 'delete_backup_image']);
 
         add_filter('manage_media_columns', [$this, 'add_optimization_column']);
@@ -59,13 +94,10 @@ class MediaLibraryOptimizer
             return;
         }
 
-        $fetcher = new ImageFetcher();
-        $sender = new ImageSender();
-        $tracker = new ImageTracker();
-        $optimization_manager = new OptimizationManager($fetcher, $sender, $tracker);
+        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
 
         // You could add this to a queue instead of processing immediately
-        $result = $optimization_manager->optimize_single_image($attachment_id);
+        $result = $this->optimization_manager->optimize_single_image($attachment_id);
 
         if ($result['status'] === 'error') {
             // Handle error (maybe add to failed queue, notify admin, etc.)
@@ -160,8 +192,7 @@ class MediaLibraryOptimizer
      */
     public function delete_backup_image($attachment_id)
     {
-        $tracker = new ImageTracker();
-        $tracker->delete_backup_image($attachment_id);
+        $this->tracker->delete_backup_image($attachment_id);
     }
 
     /**
@@ -433,14 +464,8 @@ class MediaLibraryOptimizer
             return;
         }
 
-        $fetcher = new ImageFetcher();
-        $sender = new ImageSender();
-        $tracker = new ImageTracker();
-        $optimization_manager = new OptimizationManager($fetcher, $sender, $tracker);
-
-
-        // Use the new single image optimization method
-        $result = $optimization_manager->optimize_single_image($attachment_id);
+        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+        $result = $this->optimization_manager->optimize_single_image($attachment_id);
 
         if ($result['status'] === 'success') {
             $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
@@ -475,8 +500,7 @@ class MediaLibraryOptimizer
 
         $attachment_id = intval($_POST['attachment_id']);
 
-        $tracker = new ImageTracker();
-        if ($tracker->restore_image($attachment_id)) {
+        if ($this->tracker->restore_image($attachment_id)) {
             wp_send_json_success([
                 'message' => __('Image restored successfully', 'awp-io')
             ]);
