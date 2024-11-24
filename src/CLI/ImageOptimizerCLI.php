@@ -91,15 +91,158 @@ class ImageOptimizerCLI
     public function __construct()
     {
 
-        $fetcher = new ImageFetcher();
-        $sender = new ImageSender();
-        $tracker = new ImageTracker();
-        $optimization_manager = new OptimizationManager($fetcher, $sender, $tracker);
+        $this->fetcher = ImageFetcher::get_instance();
+        $this->sender = ImageSender::get_instance();
+        $this->tracker = ImageTracker::get_instance();
+    }
 
-        $this->fetcher = $fetcher;
-        $this->sender = $sender;
-        $this->tracker = $tracker;
-        $this->optimization_manager = $optimization_manager;
+    /**
+     * Restores optimized images to their original versions
+     * 
+     * ## OPTIONS
+     * 
+     * [--all]
+     * : Restore all optimized images in the media library.
+     * 
+     * [--batch-size=<number>]
+     * : Optional. Number of images to restore in this batch.
+     * 
+     * [--dry-run]
+     * : Optional. Show how many images would be restored without actually restoring them.
+     * 
+     * [--verbose]
+     * : Optional. Show detailed restoration results for each image.
+     * 
+     * ## EXAMPLES
+     * 
+     *     wp awp-io restore --all
+     *     Restore all optimized images in the media library.
+     * 
+     *     wp awp-io restore --all --verbose
+     *     Restore all optimized images with detailed progress output.
+     * 
+     *     wp awp-io restore --batch-size=50
+     *     Restore a batch of 50 images.
+     * 
+     *     wp awp-io restore --batch-size=50 --verbose
+     *     Restore a batch of 50 images with detailed progress output.
+     * 
+     *     wp awp-io restore --dry-run
+     *     Show how many images would be restored without actually restoring them.
+     * 
+     * @when after_wp_load
+     */
+    public function restore($args, $assoc_args)
+    {
+        // If no arguments provided, show help
+        if (empty($assoc_args)) {
+            WP_CLI::runcommand('help awp-io restore');
+            return;
+        }
+
+        // Set verbose mode
+        $this->verbose = isset($assoc_args['verbose']);
+
+        // Get total count of optimized images
+        $total_images = $this->fetcher->get_total_optimized_images_count();
+
+        if ($total_images === 0) {
+            WP_CLI::success('No optimized images found to restore.');
+            return;
+        }
+
+        // Handle dry run
+        if (isset($assoc_args['dry-run'])) {
+            WP_CLI::line(sprintf('Found %d optimized images that would be restored.', $total_images));
+            return;
+        }
+
+        // Check if either --all or --batch-size is provided
+        if (!isset($assoc_args['all']) && !isset($assoc_args['batch-size'])) {
+            WP_CLI::error('Either --all or --batch-size parameter is required. Use --dry-run to see how many images would be restored.');
+            return;
+        }
+
+        // Determine how many images to process
+        $images_to_process = isset($assoc_args['batch-size'])
+            ? min((int)$assoc_args['batch-size'], $total_images)
+            : $total_images;
+
+        // Validate batch size
+        if (isset($assoc_args['batch-size']) && $images_to_process <= 0) {
+            WP_CLI::error('Batch size must be greater than 0.');
+            return;
+        }
+
+        WP_CLI::line(sprintf('Found %d optimized images.', $total_images));
+
+        if (isset($assoc_args['batch-size'])) {
+            WP_CLI::line(sprintf('Will restore %d images in this run.', $images_to_process));
+        }
+
+        // Reset counters
+        $this->processed_images = 0;
+        $this->failed_images = 0;
+
+        // Create progress bar
+        $progress = \WP_CLI\Utils\make_progress_bar('Restoring images', $images_to_process);
+        
+        while ($this->processed_images < $images_to_process) {
+            $images = $this->fetcher->get_optimized_images();
+            
+            if (empty($images)) {
+                break; // No more images to process
+            }
+
+            foreach ($images as $attachment_id) {
+                if ($this->processed_images >= $images_to_process) {
+                    break;
+                }
+
+                try {
+                    $success = $this->tracker->restore_image($attachment_id);
+                    
+                    if ($success) {
+                        if ($this->verbose) {
+                            WP_CLI::line(sprintf('✓ Successfully restored image ID: %d', $attachment_id));
+                        }
+                        $this->processed_images++;
+                        $progress->tick();
+                    } else {
+                        $this->failed_images++;
+                        WP_CLI::warning(sprintf('Failed to restore image ID %d: Backup file not found', $attachment_id));
+                    }
+                } catch (\Exception $e) {
+                    $this->failed_images++;
+                    WP_CLI::warning(sprintf('Failed to restore image ID %d: %s', $attachment_id, $e->getMessage()));
+                }
+            }
+        }
+
+        $progress->finish();
+
+        // Display final statistics
+        WP_CLI::line("\nRestore Summary:");
+        WP_CLI::line(sprintf('Total images processed: %d', $this->processed_images));
+        WP_CLI::line(sprintf('Failed restorations: %d', $this->failed_images));
+
+        if ($this->failed_images === 0) {
+            WP_CLI::success('Image restoration completed successfully!');
+        } else {
+            WP_CLI::warning(sprintf(
+                'Image restoration completed with %d failures. Check the logs for more details.',
+                $this->failed_images
+            ));
+        }
+
+        // Show remaining images message if applicable
+        $remaining = $total_images - $this->processed_images;
+        if ($remaining > 0 && !isset($assoc_args['all'])) {
+            WP_CLI::line(sprintf(
+                'There are still %d optimized images remaining. Run the command again to process more.',
+                $remaining
+            ));
+        }
     }
 
     /**
@@ -186,9 +329,11 @@ class ImageOptimizerCLI
             WP_CLI::line(sprintf('Will process %d images in this run.', $images_to_process));
         }
 
+        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+
         // Create progress bar
         $progress = \WP_CLI\Utils\make_progress_bar('Optimizing images', $images_to_process);
-
+        
         while ($this->processed_images < $images_to_process) {
             $results = $this->optimization_manager->optimize_batch();
 

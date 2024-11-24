@@ -1,10 +1,6 @@
 <?php
 namespace AWP\IO\CLI;
 
-use AWP\IO\ImageFetcher;
-use AWP\IO\ImageSender;
-use AWP\IO\ImageTracker;
-use AWP\IO\OptimizationManager;
 use WP_CLI;
 
 /**
@@ -46,11 +42,22 @@ class InitCLI
      */
     private static function register_commands()
     {
+        // Add the optimize command registration
         WP_CLI::add_command(
             'awp-io optimize',
             ['AWP\IO\CLI\ImageOptimizerCLI', 'optimize'],
             [
                 'shortdesc' => 'Optimizes images in the media library',
+                'when' => 'after_wp_load'
+            ]
+        );
+
+        // Add the restore command registration
+        WP_CLI::add_command(
+            'awp-io restore',
+            [new ImageOptimizerCLI(), 'restore'],
+            [
+                'shortdesc' => 'Restores optimized images to their original versions',
                 'when' => 'after_wp_load'
             ]
         );
