@@ -95,6 +95,7 @@ The plugin supports translation through WordPress's standard localization system
 
 ### Filters
 - `awp_stats_processing_timeout`: Modifies the timeout for stats processing
+- `awp_image_optimizer_excluded_thumbnails`: Specifies thumbnails to exclude from being sent for optimization
 
 ## Security Considerations
 
