@@ -171,6 +171,14 @@ class OptimizationManager extends Singleton
         $base_path = get_attached_file($attachment_id);
         $upload_dir = dirname($base_path);
         $metadata = wp_get_attachment_metadata($attachment_id);
+
+        if ($metadata === false) {
+            $metadata = [];
+        }
+
+        if (!isset($metadata['sizes'])) {
+            $metadata['sizes'] = [];
+        }
         
         foreach ($results as $result) {
             if (isset($result['error'])) {
@@ -280,5 +288,8 @@ class OptimizationManager extends Singleton
 
         // Update the attachment metadata
         wp_update_attachment_metadata($attachment_id, $metadata);
+
+        // Action Hook
+        do_action('awp_image_optimization_completed', $attachment_id);
     }
 }
