@@ -26,10 +26,6 @@ class StatsHandler extends Singleton {
         add_action('wp_ajax_awp_process_stats', [$this, 'ajax_process_stats']);
         add_action('wp_ajax_awp_get_stats_status', [$this, 'ajax_get_stats_status']);
         add_filter('awp_stats_processing_timeout', [$this, 'change_stats_processing_timeout']);
-        
-        // Remove direct cache invalidation
-        // Instead, let the OptimizationStats handle the processing of new images
-        // 
     }
 
     /**
