@@ -99,6 +99,34 @@ class ImageFetcher extends Singleton
     }
 
     /**
+     * Get next batch of optimized images.
+     *
+     * Retrieves a batch of image attachments that have been optimized,
+     * limited by the batch size setting.
+     *
+     * @since 1.0.0
+     * @return array Array of attachment IDs for optimized images
+     */
+    public function get_optimized_images()
+    {
+        $query = $this->db->prepare(
+            "SELECT p.ID 
+            FROM {$this->db->posts} p 
+            INNER JOIN {$this->db->postmeta} opt 
+                ON p.ID = opt.post_id 
+                AND opt.meta_key = '_awp_io_optimized' 
+            WHERE p.post_type = 'attachment' 
+            AND p.post_mime_type LIKE 'image/%' 
+            AND opt.meta_value = '1'
+            ORDER BY p.ID ASC
+            LIMIT %d",
+            $this->batch_size
+        );
+
+        return $this->db->get_col($query);
+    }
+
+    /**
      * Get total number of optimized images.
      *
      * Counts all image attachments that have been successfully optimized.
@@ -150,10 +178,15 @@ class ImageFetcher extends Singleton
      *
      * Retrieves paths to all available sizes of an image attachment,
      * including the original, full-size, and generated thumbnails.
+     * Thumbnail sizes can be excluded via settings or the 'image_optimizer_excluded_thumbnails' filter.
      *
      * @since 1.0.0
      * @param int $attachment_id WordPress attachment ID
      * @return array Array of image information including paths and size types
+     *
+     * @filter awp_image_optimizer_excluded_thumbnails Filters the list of excluded thumbnail sizes
+     *         @param array $excluded_sizes Array of thumbnail size names to exclude
+     *         @param int   $attachment_id  The attachment ID being processed
      */
     public function get_attachment_images($attachment_id)
     {
@@ -161,17 +194,17 @@ class ImageFetcher extends Singleton
         $attachment_meta = wp_get_attachment_metadata($attachment_id);
         $upload_dir = wp_upload_dir();
         $base_dir = $upload_dir['basedir'] . '/';
-
+        
         // Get both full and original paths
         $full_path = get_attached_file($attachment_id);
         $original_path = function_exists('wp_get_original_image_path') ? wp_get_original_image_path($attachment_id) : null;
-
+        
         // Add the full-sized image
         $images[] = [
             'path' => $full_path,
             'type' => 'full'
         ];
-
+        
         // Add original image only if it's different from the full-sized image
         if ($original_path && $original_path !== $full_path) {
             $images[] = [
@@ -179,21 +212,30 @@ class ImageFetcher extends Singleton
                 'type' => 'original'
             ];
         }
-
+        
         // Check if thumbnail compression is enabled
         $setting_thumbnail_compression = get_optimizer_settings('thumbnail_compression');
         if ($setting_thumbnail_compression === 'no') {
             return $images;
         }
-
+        
+        // Get excluded thumbnail sizes from settings
+        $excluded_sizes = get_optimizer_settings('exclude_thumbnail_sizes');
+        if (!is_array($excluded_sizes)) {
+            $excluded_sizes = [];
+        }
+        
+        // Allow filtering of excluded thumbnail sizes
+        $excluded_sizes = apply_filters('awp_image_optimizer_excluded_thumbnails', $excluded_sizes, $attachment_id);
+        
         // Add thumbnails
         if (isset($attachment_meta['sizes'])) {
             foreach ($attachment_meta['sizes'] as $size => $size_info) {
-                // Skip if this is the scaled size and we already have the original
-                /*if ($size === 'scaled' && $original_path) {
+                // Skip if this size is in the excluded list
+                if (in_array($size, $excluded_sizes)) {
                     continue;
-                }*/
-
+                }
+                
                 $file = $base_dir . dirname($attachment_meta['file']) . '/' . $size_info['file'];
                 $images[] = [
                     'path' => $file,
@@ -202,7 +244,7 @@ class ImageFetcher extends Singleton
                 ];
             }
         }
-
+        
         return $images;
     }
 }
