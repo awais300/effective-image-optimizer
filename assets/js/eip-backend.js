@@ -88,10 +88,10 @@ jQuery(document).ready(function($) {
         window.location.hash = target;
 
         // Hide or show the submit button based on the opened tab
-        if (target === '#optimization') {
-            $('#submit').hide();
-        } else {
+        if (target === '#general' || target === '#advanced') {
             $('#submit').show();
+        } else {
+            $('#submit').hide();
         }
     });
 
@@ -378,5 +378,151 @@ jQuery(document).ready(function($) {
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+
+
+/*Bulk Restore images*/
+jQuery(document).ready(function($) {
+    const restoreButton = $('#start-restore-button');
+    const restoreProgressBar = $('#restore-progress-bar');
+    const restoreProgressText = $('#restore-progress-text');
+    const restoreResultsList = $('#restore-results');
+    const restoreProgressContainer = $('#restore-progress-container');
+    const restoreSpinner = $('#restore-progress-container .progress-status');
+
+    let isRestoring = false;
+    let totalRestored = 0;
+    let totalErrors = 0;
+    let initialTotal = 0;
+
+    restoreButton.on('click', function(event) {
+        event.preventDefault();
+
+        if (isRestoring) {
+            return;
+        }
+
+        // Initialize restore process
+        initializeRestore();
+    });
+
+    function initializeRestore() {
+        $.ajax({
+            url: wpeio_data.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'init_bulk_restore',
+                nonce: wpeio_data.nonce
+            },
+            success: function(response) {
+                if (!response.success) {
+                    handleRestoreError('Failed to initialize restore process');
+                    return;
+                }
+
+                initialTotal = response.data.total_images;
+                
+                // Reset state
+                isRestoring = true;
+                totalRestored = 0;
+                totalErrors = 0;
+                restoreButton.prop('disabled', true);
+                restoreProgressContainer.show();
+                restoreResultsList.empty().show();
+                restoreSpinner.show();
+
+                // Start processing
+                processNextRestoreBatch();
+            },
+            error: function(xhr, status, error) {
+                handleRestoreError('Failed to initialize restore process: ' + error);
+            }
+        });
+    }
+
+    function updateRestoreProgress(progress, message) {
+        restoreProgressBar.css('width', progress + '%');
+        restoreProgressText.text(message);
+    }
+
+    function addRestoreResult(result) {
+        const statusClass = result.status === 'success' ? 'success' : 'error';
+        const messageHtml = `
+            <div class="optimization-result ${statusClass}">
+                <span class="dashicons dashicons-${result.status === 'success' ? 'yes' : 'no'}"></span>
+                ID ${result.id}: ${result.message}
+            </div>
+        `;
+        restoreResultsList.append(messageHtml);
+        restoreResultsList.scrollTop(restoreResultsList[0].scrollHeight);
+    }
+
+    function processNextRestoreBatch() {
+        $.ajax({
+            url: wpeio_data.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'start_bulk_restore',
+                nonce: wpeio_data.nonce
+            },
+            success: function(response) {
+                if (!response.success) {
+                    handleRestoreError('Server returned an error: ' + 
+                        (response.data?.message || 'Unknown error'));
+                    return;
+                }
+
+                const data = response.data;
+
+                // Process results
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(result => {
+                        if (result.status === 'success') {
+                            totalRestored++;
+                        } else {
+                            totalErrors++;
+                        }
+                        addRestoreResult(result);
+                    });
+                }
+
+                // Update progress message
+                const progressMessage = 
+                    `Restored: ${data.restored_count} of ${data.initial_total} | Errors: ${totalErrors} | Progress: ${data.progress}%`;
+                updateRestoreProgress(data.progress, progressMessage);
+
+                // Continue if not complete
+                if (!data.is_complete) {
+                    setTimeout(processNextRestoreBatch, 100);
+                } else {
+                    finishRestore(
+                        `Restore complete! Successfully restored ${data.restored_count} images with ${totalErrors} errors.`
+                    );
+                }
+            },
+            error: function(xhr, status, error) {
+                handleRestoreError('Ajax request failed: ' + error);
+            }
+        });
+    }
+
+    function handleRestoreError(message) {
+        isRestoring = false;
+        restoreButton.prop('disabled', false);
+        updateRestoreProgress(0, 'Error: ' + message);
+        restoreSpinner.hide();
+        addRestoreResult({
+            id: 'system',
+            status: 'error',
+            message: message
+        });
+    }
+
+    function finishRestore(message) {
+        isRestoring = false;
+        restoreButton.prop('disabled', false);
+        updateRestoreProgress(100, message);
+        restoreSpinner.hide();
     }
 });
