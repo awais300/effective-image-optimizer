@@ -186,8 +186,6 @@ class ImageOptimizerOptions extends Singleton
             return;
         }
 
-        $manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
-
         $total_unoptimized = $this->fetcher->get_total_unoptimized_count();
 
         if ($total_unoptimized === 0) {
@@ -200,9 +198,11 @@ class ImageOptimizerOptions extends Singleton
             return;
         }
 
+        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+        
         // Process current batch
-        $results = $manager->optimize_batch();
-        $processed_count = $manager->get_processed_count();
+        $results = $this->optimization_manager->optimize_batch();
+        $processed_count = $this->optimization_manager->get_processed_count();
 
         // Recalculate total as it may have changed
         $remaining_unoptimized = $this->fetcher->get_total_unoptimized_count();
