@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) exit; ?>
     <h2 class="nav-tab-wrapper">
         <a href="#general" class="nav-tab nav-tab-active"><?php _e('General', 'text-domain'); ?></a>
         <a href="#advanced" class="nav-tab"><?php _e('Advanced', 'text-domain'); ?></a>
-        <a href="#optimization" class="nav-tab"><?php _e('Optimization', 'text-domain'); ?></a>
+        <a href="#optimization" class="nav-tab"><?php _e('Bulk Optimization', 'text-domain'); ?></a>
         <a href="#bulk-restore" class="nav-tab"><?php _e('Bulk Restore', 'text-domain'); ?></a>
     </h2>
 
@@ -46,7 +46,7 @@ if (!defined('ABSPATH')) exit; ?>
                         <label><input type="radio" name="backup" value="yes" <?php checked($settings['backup'], 'yes'); ?>> <?php _e('Yes', 'text-domain'); ?></label>
                         <label><input type="radio" name="backup" value="no" <?php checked($settings['backup'], 'no'); ?>> <?php _e('No', 'text-domain'); ?></label>
 
-                        <p class="description"><?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/wp-fastest-image-optimizer/backups/.', 'text-domain'); ?></p>
+                        <p class="description"><?php _e('Create a backup of the original images, saved on your server in /wp-content/uploads/awp-io-backups/.', 'text-domain'); ?></p>
                     </td>
                 </tr>
                 <tr>
@@ -147,7 +147,7 @@ if (!defined('ABSPATH')) exit; ?>
                 <div id="optimization-results" class="results-container" style="display: none;"></div>
             </div>
 
-            <div class="optimization-stats-container">
+            <div class="optimization-stats-container" style="display:none;">
                 <button id="get-stats-button" class="button button-secondary">
                     <?php _e('See Latest Stats', 'text-domain'); ?>
                 </button>

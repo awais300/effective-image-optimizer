@@ -189,7 +189,7 @@ class OptimizationManager extends Singleton
             $size_data = [
                 'total_saved' => $result['bytes_saved'],
                 'total_original' => $result['original_size'],
-                'percent_saved' => round($result['percent_saved'], 2),
+                'percent_saved' => $result['percent_saved'],
                 'image_size' => $result['image_size'],
                 'file_name' => $result['file_name'],
                 'converted_to_jpg' => $result['converted_to_jpg'] ?? false

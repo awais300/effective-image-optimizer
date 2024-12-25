@@ -10,7 +10,5 @@
         ]
     },
     "require-dev": {
-        "apigen/apigen": "^4.1",
-        "theseer/phpdox": "^0.12.0"
     }
 }

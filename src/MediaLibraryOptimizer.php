@@ -361,7 +361,7 @@ class MediaLibraryOptimizer
                     $thumbnails[] = [
                         'size' => $data['image_size'],
                         'percent' => isset($data['webp']['percent_saved'])
-                            ? round($data['webp']['percent_saved'], 2)
+                            ? $data['webp']['percent_saved']
                             : 0
                     ];
                 }
@@ -374,7 +374,7 @@ class MediaLibraryOptimizer
                     $thumbnails[] = [
                         'size' => $data['image_size'],
                         'percent' => isset($data['percent_saved'])
-                            ? round($data['percent_saved'], 2)
+                            ? $data['percent_saved']
                             : 0
                     ];
                 }
