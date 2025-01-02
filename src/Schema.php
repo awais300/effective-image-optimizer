@@ -43,7 +43,7 @@ class Schema extends Singleton
             webp_conversions INT UNSIGNED NOT NULL DEFAULT 0,
             optimized_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY attachment_id (attachment_id)
+            UNIQUE KEY attachment_id (attachment_id) -- Add this unique key to make $wpdb->replace to work properly.
         ) {$charset_collate};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
