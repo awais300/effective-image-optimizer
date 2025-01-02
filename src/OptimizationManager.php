@@ -290,6 +290,6 @@ class OptimizationManager extends Singleton
         wp_update_attachment_metadata($attachment_id, $metadata);
 
         // Action Hook
-        do_action('awp_image_optimization_completed', $attachment_id);
+        do_action('awp_image_optimization_completed', $attachment_id, $optimization_data);
     }
 }
