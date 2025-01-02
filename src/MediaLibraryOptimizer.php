@@ -255,63 +255,7 @@ class MediaLibraryOptimizer
         </div>
         <?php
     }
-
-    /**
-     * Legacy method for getting optimization statistics.
-     *
-     * @deprecated 1.1.0 Use get_optimization_stats() instead
-     * @since 1.0.0
-     * @param array $optimization_data Array of optimization data
-     * @return string HTML markup for optimization statistics
-     */
-    private function get_optimization_stats_old($optimization_data)
-    {
-        if (empty($optimization_data)) {
-            return '';
-        }
-
-        $total_original = 0;
-        $total_saved = 0;
-        $thumbnails = [];
-
-        foreach ($optimization_data as $data) {
-            $original = isset($data['total_original']) ? $data['total_original'] : 0;
-            $saved = isset($data['total_saved']) ? $data['total_saved'] : 0;
-
-            $total_original += $original;
-            $total_saved += $saved;
-
-            if (!empty($data['image_size'])) {
-                $thumbnails[] = [
-                    'size' => $data['image_size'],
-                    'percent' => isset($data['percent_saved']) ? round($data['percent_saved'], 2) : 0
-                ];
-            }
-        }
-
-        ob_start();
-
-        // Calculate overall percentage
-        if ($total_original > 0) {
-            $percent = round(($total_saved / $total_original) * 100, 2);
-        ?>
-            <div class="optimization-stats">
-                <div class="reduction-percent">
-                    <?php echo sprintf(__('Reduced by %s%%', 'awp-io'), $percent); ?>
-                </div>
-                <?php if (!empty($thumbnails)) : ?>
-                    <div class="thumbnail-stats" data-thumbnails='<?php echo esc_attr(json_encode($thumbnails)); ?>'>
-                        +<?php echo count($thumbnails); ?> thumbnails optimized
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php
-        }
-
-        return ob_get_clean();
-    }
-
-
+    
     /**
      * Generates HTML markup for displaying optimization statistics.
      *
