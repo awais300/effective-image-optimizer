@@ -10,6 +10,7 @@ use AWP\IO\ImageSender;
 use AWP\IO\ImageTracker;
 use AWP\IO\OptimizationManager;
 use AWP\IO\Singleton;
+use AWP\IO\Stats\OptimizationStatsManager;
 
 defined('ABSPATH') || exit;
 
@@ -266,6 +267,7 @@ class ImageOptimizerOptions extends Singleton
         $data     = array(
             'settings' => $settings,
             'has_unoptimized_images' => $this->fetcher->has_unoptimized_images(),
+            'stats' => (OptimizationStatsManager::get_instance())->get_total_stats()
         );
 
         $this->loader->get_template(
