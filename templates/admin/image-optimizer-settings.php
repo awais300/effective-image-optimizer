@@ -147,21 +147,10 @@ if (!defined('ABSPATH')) exit; ?>
                 <div id="optimization-results" class="results-container" style="display: none;"></div>
             </div>
 
-            <div class="optimization-stats-container" style="display:none;">
-                <button id="get-stats-button" class="button button-secondary">
-                    <?php _e('See Latest Stats', 'text-domain'); ?>
-                </button>
-                
-                <!-- Progress Section -->
-                <div id="stats-progress-container" style="display: none;">
-                    <div class="progress-status">
-                        <span class="spinner is-active"></span>
-                        <span id="stats-progress"></span>
-                    </div>
-                    <div class="stat-progress-bar-container">
-                        <div id="stat-progress-bar" class="stat-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                </div>
+            <div class="optimization-stats-container">
+                <p id="get-stats-button" class="button button-secondary">
+                   <a href="" onclick="window.location.reload(); return false;"><?php _e('Reload', 'text-domain'); ?></a>
+                </p>
 
                 <!-- Unoptimized Images Notice -->
                 <?php if($has_unoptimized_images): ?>
@@ -171,7 +160,7 @@ if (!defined('ABSPATH')) exit; ?>
                 <?php endif; ?>
                 
                 <!-- Stats Display -->
-                <div id="stats-display" class="stats-card" style="display: none;">
+                <div id="stats-display" class="stats-card">
                     <h3><?php _e('Optimization Statistics', 'text-domain'); ?></h3>
                     
                     <div class="stats-grid">
@@ -180,11 +169,11 @@ if (!defined('ABSPATH')) exit; ?>
                             <h4><?php _e('Total Savings', 'text-domain'); ?></h4>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('WebP Savings:', 'text-domain'); ?></span>
-                                <span id="webp-savings" class="stat-value">-</span>
+                                <span id="webp-savings" class="stat-value"><?php echo size_format($stats->total_webp_savings, 2) ?: '-';?></span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('Normal Savings:', 'text-domain'); ?></span>
-                                <span id="normal-savings" class="stat-value">-</span>
+                                <span id="normal-savings" class="stat-value"><?php echo size_format($stats->total_normal_savings, 2) ?: '-';?></span>
                             </div>
                         </div>
 
@@ -193,11 +182,11 @@ if (!defined('ABSPATH')) exit; ?>
                             <h4><?php _e('Conversions', 'text-domain'); ?></h4>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('WebP Images:', 'text-domain'); ?></span>
-                                <span id="webp-conversions" class="stat-value">-</span>
+                                <span id="webp-conversions" class="stat-value"><?php echo $stats->total_webp_conversions ?: '-';?></span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('PNG to JPG:', 'text-domain'); ?></span>
-                                <span id="png-jpg-conversions" class="stat-value">-</span>
+                                <span id="png-jpg-conversions" class="stat-value"><?php echo $stats->total_png_to_jpg_conversions ?: '-';?></span>
                             </div>
                         </div>
                     </div>
