@@ -45,3 +45,22 @@ require_once 'vendor/autoload.php';
 
 // Initialize the plugin
 Bootstrap::get_instance();
+
+
+/**
+ * Activate the plugin.
+ */
+function effective_image_optimizer_on_activate()
+{
+	(Schema::get_instance())->create_table();
+}
+register_activation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_on_activate');
+
+
+/**
+ * Deactivation hook.
+ */
+function effective_image_optimizer_on_deactivate()
+{
+}
+register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_on_deactivate');
