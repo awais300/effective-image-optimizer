@@ -3,7 +3,7 @@
 namespace AWP\IO;
 
 use AWP\IO\Admin\ImageOptimizerOptions;
-use AWP\IO\Stats\StatsHandler;
+use AWP\IO\Stats\OptimizationStatsManager;
 
 defined('ABSPATH') || exit;
 
@@ -141,7 +141,7 @@ class Bootstrap
         
         new MediaLibraryOptimizer();
 
-        StatsHandler::get_instance();
+        OptimizationStatsManager::get_instance();
         BulkRestore::get_instance();
 
         $setting_deliver_next_gen_images = $optimizer->get_optimizer_settings('deliver_next_gen_images');
