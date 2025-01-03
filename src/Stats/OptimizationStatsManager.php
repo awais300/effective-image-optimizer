@@ -87,7 +87,7 @@ class OptimizationStatsManager extends Singleton
      * @return array An array of optimization stats for the attachment.
      * @since 1.0.0
      */
-    public static function get_stats_for_attachment($attachment_id)
+    public function get_stats_for_attachment($attachment_id)
     {
         global $wpdb;
 
@@ -102,6 +102,28 @@ class OptimizationStatsManager extends Singleton
     }
 
     /**
+     * Remove optimization stats for a specific attachment.
+     *
+     * This method deletes all optimization statistics associated with the given attachment ID.
+     *
+     * @param int $attachment_id The attachment ID for which stats should be removed.
+     * @return int|false The number of rows deleted, or false on error.
+     * @since 1.0.0
+     */
+    public function remove_stats_for_attachment($attachment_id)
+    {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . Schema::HISTORY_TABLE_NAME;
+
+        return $wpdb->delete(
+            $table_name,
+            ['attachment_id' => $attachment_id],
+            ['%d'] // Specifies the format of the attachment_id (integer)
+        );
+    }
+
+    /**
      * Get total optimization stats across all attachments.
      *
      * This method retrieves the cumulative optimization statistics for all attachments.
@@ -109,7 +131,7 @@ class OptimizationStatsManager extends Singleton
      * @return object|null An object containing the total optimization stats, or null if no stats are found.
      * @since 1.0.0
      */
-    public static function get_total_stats()
+    public function get_total_stats()
     {
         global $wpdb;
 

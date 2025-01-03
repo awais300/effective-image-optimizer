@@ -2,6 +2,8 @@
 
 namespace AWP\IO;
 
+use AWP\IO\Stats\OptimizationStatsManager;
+
 /**
  * ImageTracker Class
  *
@@ -109,6 +111,7 @@ class ImageTracker extends Singleton
             delete_post_meta($attachment_id, '_awp_io_optimized');
             delete_post_meta($attachment_id, '_awp_io_optimization_data');
             delete_post_meta($attachment_id, '_awp_io_backup_path');
+            (OptimizationStatsManager::get_instance())->remove_stats_for_attachment($attachment_id);
 
             // Regenerate thumbnails
             $metadata = wp_generate_attachment_metadata($attachment_id, $current_path);
