@@ -81,7 +81,55 @@ class OptimizationManager extends Singleton
      * @since 1.0.0
      * @return array Array of optimization results for each processed image
      */
-    public function optimize_batch()
+    public function optimize_batch($re_optimize = false)
+    {
+        $attachment_ids = $this->fetcher->get_unoptimized_images($re_optimize);
+        $results = [];
+
+        if (!empty($attachment_ids)) {
+            foreach ($attachment_ids as $attachment_id) {
+                try {
+                    $images = $this->fetcher->get_attachment_images($attachment_id);
+                    $optimization_results = $this->sender->send_images($attachment_id, $images);
+
+                    // If backup already exist thene skip backup creation during re-optimization
+                    if ($re_optimize && $this->tracker->backup_exists($attachment_id) === false) {
+                        $this->tracker->create_backup($attachment_id);
+                    }
+
+                    if(!$re_optimize) {
+                        $this->tracker->create_backup($attachment_id);
+                    }
+
+                    $this->process_optimization_results($attachment_id, $optimization_results);
+                    $this->processed_count++;
+
+                    // Track processed image during re-optimization
+                    if ($re_optimize) {
+                        $this->tracker->track_processed_image_for_reoptimization($attachment_id);
+                    }
+
+                    $results[] = [
+                        'id' => $attachment_id,
+                        'status' => 'success',
+                        'message' => 'Images optimized successfully',
+                    ];
+                } catch (\Exception $e) {
+                    $results[] = [
+                        'id' => $attachment_id,
+                        'status' => 'error',
+                        'message' => $e->getMessage(),
+                    ];
+                    error_log("Image optimization failed for ID {$attachment_id}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $results;
+    }
+
+   
+    public function optimize_batch_old()
     {
         $attachment_ids = $this->fetcher->get_unoptimized_images();
         $results = [];
@@ -123,13 +171,23 @@ class OptimizationManager extends Singleton
      *
      * @since 1.0.0
      * @param int $attachment_id WordPress attachment ID to optimize
+     * @param int $reoptimize Whether attempt to re-optimize image or not 
      * @return array Optimization result containing status and message
      */
-    public function optimize_single_image($attachment_id)
+    public function optimize_single_image($attachment_id, $re_optimize = false)
     {
         try {
             $images = $this->fetcher->get_attachment_images($attachment_id);
-            $this->tracker->create_backup($attachment_id);
+            
+            // If backup already exist thene skip backup creation during re-optimization
+            if ($re_optimize && $this->tracker->backup_exists($attachment_id) === false) {
+                $this->tracker->create_backup($attachment_id);
+            }
+
+            if(!$re_optimize) {
+                $this->tracker->create_backup($attachment_id);
+            }
+
             $optimization_results = $this->sender->send_images($attachment_id, $images);
 
             $this->process_optimization_results($attachment_id, $optimization_results);
@@ -202,14 +260,16 @@ class OptimizationManager extends Singleton
                 
                 // Update metadata dimensions based on image type
                 if ($result['image_type'] === 'full' || $result['image_type'] === 'original') {
-                    // Update main image dimensions
+                    // Update main image dimensions & filesize
                     $metadata['width'] = $result['dimensions']['width'];
                     $metadata['height'] = $result['dimensions']['height'];
+                    $metadata['filesize'] = $result['optimized_size'];
                 } else {
-                    // Update thumbnail dimensions
+                    // Update thumbnail dimensions & file size
                     if (isset($metadata['sizes'][$result['image_size']])) {
                         $metadata['sizes'][$result['image_size']]['width'] = $result['dimensions']['width'];
                         $metadata['sizes'][$result['image_size']]['height'] = $result['dimensions']['height'];
+                        $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
                     }
                 }
             }
@@ -279,7 +339,7 @@ class OptimizationManager extends Singleton
         $this->tracker->mark_as_optimized($attachment_id, $optimization_data);
 
         // Update file size in metadata
-        $metadata['filesize'] = filesize($base_path);
+        //$metadata['filesize'] = filesize($base_path);
 
         // Add WebP information to metadata if exists
         if (isset($optimization_data[0]['webp'])) {
