@@ -34,6 +34,7 @@ class ImageTracker extends Singleton
         $this->db = $wpdb;
 
         add_action('delete_attachment', [$this, 'delete_backup_image']);
+        add_action('awp_image_optimization_completed', [$this, 'remove_restore_attempt_meta'], 10, 2);
     }
 
     /**
@@ -63,6 +64,10 @@ class ImageTracker extends Singleton
      */
     public function create_backup($attachment_id)
     {
+        $setting_backup = get_optimizer_settings('backup');
+        if($setting_backup === 'no') {
+            return;
+        }
         //$file_path = get_attached_file($attachment_id);
         $file_path = wp_get_original_image_path($attachment_id);
         $uploads_dir = wp_upload_dir();
@@ -103,21 +108,28 @@ class ImageTracker extends Singleton
 
         // Convert relative path to full path
         $backup_path = $uploads_dir['basedir'] . '/' . $relative_backup_path;
-        //$current_path = get_attached_file($attachment_id);
         $current_path = wp_get_original_image_path($attachment_id);
 
-        if (file_exists($backup_path)) {
+        if (is_file($backup_path)) {
+            error_log('backup exists');
+            error_log($backup_path);
+            // Restore the original image
             copy($backup_path, $current_path);
-            delete_post_meta($attachment_id, '_awp_io_optimized');
-            delete_post_meta($attachment_id, '_awp_io_optimization_data');
-            delete_post_meta($attachment_id, '_awp_io_backup_path');
-            (OptimizationStatsManager::get_instance())->remove_stats_for_attachment($attachment_id);
+
+            // Delete backup image.
+            wp_delete_file($backup_path);
+
+            // Clean up optimization data, files, and meta
+            $this->cleanup_optimization_data($attachment_id);
 
             // Regenerate thumbnails
             $metadata = wp_generate_attachment_metadata($attachment_id, $current_path);
             wp_update_attachment_metadata($attachment_id, $metadata);
+
             return true;
         }
+        // Attempt to restore, this will allow to not to include this attachment repeatedly in query while doing the bulk restore.
+        update_post_meta($attachment_id, '_awp_io_restore_attempt', '1');
         return false;
     }
 
@@ -136,9 +148,9 @@ class ImageTracker extends Singleton
         $relative_backup_path = get_post_meta($attachment_id, '_awp_io_backup_path', true);
 
         // If no backup path exists, return early
-        if (empty($relative_backup_path)) {
+        /*if (empty($relative_backup_path)) {
             return;
-        }
+        }*/
 
         // Get uploads directory information
         $uploads_dir = wp_upload_dir();
@@ -147,13 +159,105 @@ class ImageTracker extends Singleton
         $backup_path = $uploads_dir['basedir'] . '/' . $relative_backup_path;
 
         // Delete the backup file if it exists
-        if (file_exists($backup_path)) {
+        if (is_file($backup_path)) {
             wp_delete_file($backup_path);
         }
+
+        // Clean up optimization data, files, and meta
+        $this->cleanup_optimization_data($attachment_id);
+    }
+
+    /**
+     * Clean up optimization data, files, and meta for an attachment.
+     *
+     * @param int $attachment_id The ID of the attachment
+     */
+    private function cleanup_optimization_data($attachment_id)
+    {
+        // Delete .webp and converted .jpg files
+        $this->delete_optimized_files($attachment_id);
 
         // Clean up post meta
         delete_post_meta($attachment_id, '_awp_io_optimized');
         delete_post_meta($attachment_id, '_awp_io_optimization_data');
         delete_post_meta($attachment_id, '_awp_io_backup_path');
+
+        // Clean up stats
+        (OptimizationStatsManager::get_instance())->remove_stats_for_attachment($attachment_id);
+    }
+
+    /**
+     * Delete optimized files (.webp and converted .jpg) for an attachment.
+     *
+     * @param int $attachment_id The ID of the attachment
+     */
+    private function delete_optimized_files($attachment_id)
+    {
+        $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
+
+        /*error_log('Reporting Data:');
+        error_log(print_r($optimization_data, true));*/
+
+        if (!empty($optimization_data)) {
+            $upload_dir = wp_upload_dir();
+            $base_dir = $upload_dir['basedir'];
+
+            // Get the partial path from _wp_attached_file
+            $attached_file = get_post_meta($attachment_id, '_wp_attached_file', true);
+            if ($attached_file) {
+                // Extract the directory path from the partial path (e.g., '2023/09/')
+                $file_directory = dirname($attached_file) . '/';
+            } else {
+                // Fallback: If _wp_attached_file is not available, assume no subdirectory
+                $file_directory = '';
+            }
+
+            foreach ($optimization_data as $size_data) {
+                // Delete .webp file if it exists
+                if (isset($size_data['webp'])) {
+                    $webp_path = $base_dir . '/' . $file_directory . $size_data['webp']['file_name'];
+                    error_log('webp: ' . $webp_path);
+                    if (is_file($webp_path)) {
+                        wp_delete_file($webp_path);
+                    }
+                }
+
+                // Delete converted .jpg file if it exists
+                if (isset($size_data['jpg_path']) && $size_data['converted_to_jpg']) {
+                    $jpg_path = $base_dir . '/' . $file_directory . $size_data['jpg_path'];
+                    error_log('jpg: ' . $jpg_path);
+                    if (is_file($jpg_path)) {
+                        wp_delete_file($jpg_path);
+                    }
+                }
+            }
+        }
+    }
+
+    public function track_processed_image_for_reoptimization($image_id)
+    {
+
+        $this->db->insert(
+            $this->db->prefix . Schema::REOPTIMIZATION_TABLE_NAME,
+            ['image_id' => $image_id],
+            ['%d']
+        );
+    }
+
+    public function backup_exists($attachment_id) {
+        $relative_backup_path = get_post_meta($attachment_id, '_awp_io_backup_path', true);
+        $uploads_dir = wp_upload_dir();
+        $backup_path = $uploads_dir['basedir'] . '/' . $relative_backup_path;
+
+        if(!empty($relative_backup_path) && is_file($backup_path)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function remove_restore_attempt_meta($attachment_id, $optimization_data) {
+        // If meta exist while doing optimization remove it, so, restore attempt can be made again.
+        delete_post_meta($attachment_id, '_awp_io_restore_attempt');
     }
 }
