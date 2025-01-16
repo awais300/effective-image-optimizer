@@ -52,7 +52,10 @@ Bootstrap::get_instance();
  */
 function effective_image_optimizer_on_activate()
 {
-	(Schema::get_instance())->create_table();
+	$schema = Schema::get_instance();
+
+    $schema->create_optimization_stats_table();
+    $schema->create_reoptimization_table();
 }
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_on_activate');
 
@@ -64,3 +67,7 @@ function effective_image_optimizer_on_deactivate()
 {
 }
 register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_on_deactivate');
+
+
+/*delete_transient('bulk_restore_total_images');
+exit;*/
