@@ -11,6 +11,7 @@ use AWP\IO\ImageTracker;
 use AWP\IO\OptimizationManager;
 use AWP\IO\Singleton;
 use AWP\IO\Stats\OptimizationStatsManager;
+use AWP\IO\Schema;
 
 defined('ABSPATH') || exit;
 
@@ -187,7 +188,11 @@ class ImageOptimizerOptions extends Singleton
             return;
         }
 
-        $total_unoptimized = $this->fetcher->get_total_unoptimized_count();
+        // Check if re-optimization is enabled
+        $re_optimize = (bool) intval($_POST['is_re_optimize']);
+
+        // Get total count based on re-optimization mode
+        $total_unoptimized = $this->fetcher->get_total_unoptimized_count($re_optimize);
 
         if ($total_unoptimized === 0) {
             wp_send_json_success([
@@ -202,11 +207,11 @@ class ImageOptimizerOptions extends Singleton
         $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
         
         // Process current batch
-        $results = $this->optimization_manager->optimize_batch();
+        $results = $this->optimization_manager->optimize_batch($re_optimize);
         $processed_count = $this->optimization_manager->get_processed_count();
 
         // Recalculate total as it may have changed
-        $remaining_unoptimized = $this->fetcher->get_total_unoptimized_count();
+        $remaining_unoptimized = $this->fetcher->get_total_unoptimized_count($re_optimize);
         $total_processed = $total_unoptimized - $remaining_unoptimized;
 
         // Calculate progress
@@ -215,8 +220,17 @@ class ImageOptimizerOptions extends Singleton
         // Determine if we're done
         $is_complete = $remaining_unoptimized === 0;
 
+
+        // Clear processed IDs if re-optimization is complete
+        if ($re_optimize && $is_complete) {
+            error_log('TRUNCATing new');
+            global $wpdb;
+            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME);
+        }
+
         wp_send_json_success([
             'progress' => $progress,
+            're_optimize_mode' => $re_optimize,
             'message' => $is_complete ? 'Optimization complete!' : "Optimizing images...",
             'results' => $results,
             'is_complete' => $is_complete,
