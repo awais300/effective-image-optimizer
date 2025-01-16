@@ -20,6 +20,13 @@ class Schema extends Singleton
     public const HISTORY_TABLE_NAME = 'awp_optimization_history';
 
     /**
+     * The name of the optimization history table.
+     *
+     * @var string
+     */
+    public const REOPTIMIZATION_TABLE_NAME = 'awp_reoptimize_processed';
+
+    /**
      * Create the optimization stats table.
      *
      * This method defines the structure of the optimization history table and creates it if it doesn't already exist.
@@ -27,7 +34,7 @@ class Schema extends Singleton
      *
      * @return void
      */
-    public function create_table()
+    public function create_optimization_stats_table()
     {
         global $wpdb;
 
@@ -44,6 +51,24 @@ class Schema extends Singleton
             optimized_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY attachment_id (attachment_id) -- Add this unique key to make $wpdb->replace to work properly.
+        ) {$charset_collate};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta($sql);
+    }
+
+    public function create_reoptimization_table()
+    {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . self::REOPTIMIZATION_TABLE_NAME;
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            image_id BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY image_id (image_id)
         ) {$charset_collate};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
