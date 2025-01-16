@@ -133,6 +133,16 @@ if (!defined('ABSPATH')) exit; ?>
                     Start Optimization
                 </button>
 
+                <label class="re-optimize">
+                    <input id="re-optimize-images" type="checkbox" name="re-optimize-images">
+                    <?php _e('Bulk Re-optimize images', 'text-domain'); ?>
+                </label>
+
+                <span class="tooltip">
+                    <span class="tooltip-icon">?</span>
+                    <span class="tooltip-text"><?php _e('Enable this option to re-optimize images that have already been optimized. This can be useful if you want to apply new optimization settings to previously processed images.', 'text-domain'); ?></span>
+                </span>
+
                 <div id="progress-container" class="progress-section" style="display: none;">
                     <div class="progress-status">
                         <span class="spinner is-active"></span>
