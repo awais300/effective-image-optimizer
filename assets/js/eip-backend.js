@@ -24,13 +24,7 @@
             function() { // mouseleave
                 $('.awp-tooltip').hide();
             }
-        ).mousemove(function(e) {
-            // Move tooltip with cursor
-            $('.awp-tooltip').css({
-                top: e.pageY + 10,
-                left: e.pageX + 10
-            });
-        });
+        );
 
         function generateTooltipContent(thumbnails) {
             var content = '';
@@ -107,6 +101,7 @@ jQuery(document).ready(function($) {
     const resultsList = $('#optimization-results');
     const progressContainer = $('#progress-container');
     const spinner = $('.progress-status');
+    const reOptimizeImages = $('#re-optimize-images');
 
     let isOptimizing = false;
     let totalOptimized = 0;
@@ -124,6 +119,7 @@ jQuery(document).ready(function($) {
         totalOptimized = 0;
         totalErrors = 0;
         startButton.prop('disabled', true);
+        reOptimizeImages.prop('disabled', true);
         progressContainer.show();
         resultsList.empty().show();
         spinner.show();
@@ -149,12 +145,14 @@ jQuery(document).ready(function($) {
     }
 
     function processNextBatch() {
+        var isReOptimize = reOptimizeImages.is(':checked') ? 1 : 0;
         $.ajax({
             url: wpeio_data.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'start_optimization',
-                nonce: wpeio_data.nonce
+                nonce: wpeio_data.nonce,
+                is_re_optimize: isReOptimize
             },
             success: function(response) {
                 if (!response.success) {
@@ -183,7 +181,7 @@ jQuery(document).ready(function($) {
                 // Continue if not complete
                 if (!data.is_complete) {
                     // Add a small delay between batches
-                    setTimeout(processNextBatch, 1000);
+                    setTimeout(processNextBatch, 100);
                 } else {
                     finishOptimization(data.message || `Optimization complete! Successfully optimized ${totalOptimized} images with ${totalErrors} errors.`);
                 }
@@ -197,6 +195,7 @@ jQuery(document).ready(function($) {
     function handleError(message) {
         isOptimizing = false;
         startButton.prop('disabled', false);
+        reOptimizeImages.prop('disabled', false);
         updateProgress(0, 'Error: ' + message);
         spinner.hide();
         addResultMessage({
@@ -209,6 +208,7 @@ jQuery(document).ready(function($) {
     function finishOptimization(message) {
         isOptimizing = false;
         startButton.prop('disabled', false);
+        reOptimizeImages.prop('disabled', false);
         updateProgress(100, message);
         spinner.hide();
     }
@@ -230,6 +230,7 @@ jQuery(document).ready(function($) {
 
             $container.addClass('processing');
             $button.prop('disabled', true);
+            var is_re_optimize = $button.hasClass('reoptimize-image') ? 1 : 0;
 
             $.ajax({
                 url: wpeio_data.ajaxUrl,
@@ -237,7 +238,8 @@ jQuery(document).ready(function($) {
                 data: {
                     action: action,
                     attachment_id: attachmentId,
-                    nonce: wpeio_data.nonce
+                    nonce: wpeio_data.nonce,
+                    is_re_optimize: is_re_optimize
                 },
                 success: function(response) {
                     if (response.success) {
@@ -267,6 +269,12 @@ jQuery(document).ready(function($) {
         $(document).on('click', '.optimization-controls .restore-image', function(e) {
             e.preventDefault();
             handleOptimizationAction($(this), 'restore_single_image');
+        });
+
+        // ReOptimize image button handler
+        $(document).on('click', '.optimization-controls .reoptimize-image', function(e) {
+            e.preventDefault();
+            handleOptimizationAction($(this), 'optimize_single_image');
         });
     });
 })(jQuery);
