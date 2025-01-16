@@ -144,7 +144,7 @@ class ImageOptimizerCLI
         $this->verbose = isset($assoc_args['verbose']);
 
         // Get total count of optimized images
-        $total_images = $this->fetcher->get_total_optimized_images_count();
+        $total_images = $this->fetcher->get_total_optimized_images_count_for_restore();
 
         if ($total_images === 0) {
             WP_CLI::success('No optimized images found to restore.');
@@ -188,7 +188,7 @@ class ImageOptimizerCLI
         $progress = \WP_CLI\Utils\make_progress_bar('Restoring images', $images_to_process);
         
         while ($this->processed_images < $images_to_process) {
-            $images = $this->fetcher->get_optimized_images();
+            $images = $this->fetcher->get_optimized_images_for_restore();
             
             if (empty($images)) {
                 break; // No more images to process
