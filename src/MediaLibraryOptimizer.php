@@ -132,10 +132,18 @@ class MediaLibraryOptimizer
         $html = '<div class="optimization-controls" data-id="' . esc_attr($post->ID) . '">';
 
         if ($is_optimized) {
-            $html .= '<button type="button" class="button restore-image">' .
-                esc_html__('Restore Original', 'awp-io') .
-                '<span class="spinner"></span>' .
-                '</button>';
+
+            if($this->tracker->backup_exists($post->ID)) {
+                $html .= '<button type="button" class="button restore-image">' .
+                    esc_html__('Restore Original', 'awp-io') .
+                    '<span class="spinner"></span>' .
+                    '</button>;';
+            }
+
+            $html .= '<button type="button" class="button reoptimize-image">' .
+            esc_html__('ReOptimize Image', 'awp-io') .
+            '<span class="spinner"></span>' .
+            '</button>';
 
             if ($optimization_data) {
                 $html .= '<div class="optimization-stats">' .
@@ -237,10 +245,20 @@ class MediaLibraryOptimizer
 ?>
         <div class="optimization-controls" data-id="<?php echo esc_attr($attachment_id); ?>">
             <?php if ($is_optimized) : ?>
-                <button class="button restore-image">
-                    <?php _e('Restore Original', 'awp-io'); ?>
+
+                <?php if($this->tracker->backup_exists($attachment_id)): ?>
+                    <button class="button restore-image">
+                        <?php _e('Restore Original', 'awp-io'); ?>
+                        <span class="spinner"></span>
+                    </button>
+                <?php endif; ?>
+                
+
+                 <button class="button reoptimize-image">
+                    <?php _e('ReOptimize Image', 'awp-io'); ?>
                     <span class="spinner"></span>
                 </button>
+
                 <?php if ($optimization_data) : ?>
                     <div class="optimization-stats">
                         <?php echo $this->get_optimization_stats($optimization_data); ?>
@@ -395,6 +413,7 @@ class MediaLibraryOptimizer
         }
 
         $attachment_id = intval($_POST['attachment_id']);
+        $re_optimize = (bool) intval($_POST['is_re_optimize']);
 
         // Verify this is an image
         if (!wp_attachment_is_image($attachment_id)) {
@@ -402,14 +421,15 @@ class MediaLibraryOptimizer
             return;
         }
 
+
         // Check if image is already optimized
-        if (get_post_meta($attachment_id, '_awp_io_optimized', true)) {
+        if ((!$re_optimize) && get_post_meta($attachment_id, '_awp_io_optimized', true)) {
             wp_send_json_error(['message' => __('Image is already optimized', 'awp-io')]);
             return;
         }
 
         $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
-        $result = $this->optimization_manager->optimize_single_image($attachment_id);
+        $result = $this->optimization_manager->optimize_single_image($attachment_id, $re_optimize);
 
         if ($result['status'] === 'success') {
             $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
