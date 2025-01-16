@@ -50,6 +50,19 @@ class ImageFetcher extends Singleton
         return $this->batch_size;
     }
 
+    public function get_total_re_unoptimized_count()
+    {
+        return (int) $this->db->get_var("
+            SELECT COUNT(p.ID)
+            FROM {$this->db->posts} p
+            INNER JOIN {$this->db->postmeta} opt ON p.ID = opt.post_id AND opt.meta_key = '_awp_io_optimized'
+            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME. " r ON p.ID = r.image_id
+            WHERE p.post_type = 'attachment'
+            AND p.post_mime_type LIKE 'image/%'
+            AND r.image_id IS NULL
+        ");
+    }
+
     /**
      * Get total count of unoptimized images.
      *
@@ -58,8 +71,12 @@ class ImageFetcher extends Singleton
      * @since 1.0.0
      * @return int Number of unoptimized images
      */
-    public function get_total_unoptimized_count()
+    public function get_total_unoptimized_count($re_optimize = false)
     {
+        if ($re_optimize) {
+            return $this->get_total_re_unoptimized_count();
+        }
+        
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
             FROM {$this->db->posts} p
@@ -68,6 +85,22 @@ class ImageFetcher extends Singleton
             AND p.post_mime_type LIKE 'image/%'
             AND opt.meta_value IS NULL
         ");
+    }
+
+    public function get_reoptimize_images()
+    {
+        return $this->db->get_col($this->db->prepare(
+            "SELECT p.ID
+            FROM {$this->db->posts} p
+            INNER JOIN {$this->db->postmeta} opt ON p.ID = opt.post_id AND opt.meta_key = '_awp_io_optimized'
+            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME. " r ON p.ID = r.image_id
+            WHERE p.post_type = 'attachment'
+            AND p.post_mime_type LIKE 'image/%'
+            AND r.image_id IS NULL
+            ORDER BY p.ID ASC
+            LIMIT %d",
+            $this->batch_size
+        ));
     }
 
     /**
@@ -79,8 +112,12 @@ class ImageFetcher extends Singleton
      * @since 1.0.0
      * @return array Array of attachment IDs for unoptimized images
      */
-    public function get_unoptimized_images()
+    public function get_unoptimized_images($re_optimize = false)
     {
+        if ($re_optimize) {
+            return $this->get_reoptimize_images();
+        }
+
         $query = $this->db->prepare(
             "SELECT p.ID 
             FROM {$this->db->posts} p 
@@ -144,6 +181,64 @@ class ImageFetcher extends Singleton
                 AND opt.meta_key = '_awp_io_optimized'
             WHERE p.post_type = 'attachment'
             AND p.post_mime_type LIKE 'image/%'
+        ");
+    }
+
+    /**
+     * Get next batch of optimized images for restore.
+     *
+     * Retrieves a batch of image attachments that have been optimized and do not have the _awp_io_restore_attempt meta key,
+     * limited by the batch size setting.
+     *
+     * @since 1.0.0
+     * @return array Array of attachment IDs for optimized images without _awp_io_restore_attempt
+     */
+    public function get_optimized_images_for_restore()
+    {
+        $query = $this->db->prepare(
+            "SELECT p.ID 
+            FROM {$this->db->posts} p 
+            INNER JOIN {$this->db->postmeta} opt 
+                ON p.ID = opt.post_id 
+                AND opt.meta_key = '_awp_io_optimized' 
+            LEFT JOIN {$this->db->postmeta} restore 
+                ON p.ID = restore.post_id 
+                AND restore.meta_key = '_awp_io_restore_attempt'
+            WHERE p.post_type = 'attachment' 
+            AND p.post_mime_type LIKE 'image/%' 
+            AND opt.meta_value = '1'
+            AND restore.meta_id IS NULL
+            ORDER BY p.ID ASC
+            LIMIT %d",
+            $this->batch_size
+        );
+
+        return $this->db->get_col($query);
+    }
+
+    /**
+     * Get total number of optimized images that have not been attempted for restore.
+     *
+     * Counts all image attachments that have been successfully optimized and do not have the _awp_io_restore_attempt meta key.
+     *
+     * @since 1.0.0
+     * @return int Number of optimized images without _awp_io_restore_attempt
+     */
+    public function get_total_optimized_images_count_for_restore() 
+    {
+        return (int) $this->db->get_var("
+            SELECT COUNT(p.ID)
+            FROM {$this->db->posts} p
+            INNER JOIN {$this->db->postmeta} opt 
+                ON p.ID = opt.post_id 
+                AND opt.meta_key = '_awp_io_optimized'
+            LEFT JOIN {$this->db->postmeta} restore 
+                ON p.ID = restore.post_id 
+                AND restore.meta_key = '_awp_io_restore_attempt'
+            WHERE p.post_type = 'attachment'
+            AND p.post_mime_type LIKE 'image/%'
+            AND opt.meta_value = '1'
+            AND restore.meta_id IS NULL
         ");
     }
 
