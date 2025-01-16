@@ -62,7 +62,7 @@ class BulkRestore extends Singleton
         check_ajax_referer('start_optimization_nonce', 'nonce');
 
         // Get initial total of optimized images
-        $total_optimized = $this->fetcher->get_total_optimized_images_count();
+        $total_optimized = $this->fetcher->get_total_optimized_images_count_for_restore();
         
         // Store this number for progress calculation
         set_transient($this->transient_key, $total_optimized, HOUR_IN_SECONDS);
@@ -85,7 +85,7 @@ class BulkRestore extends Singleton
     {
         check_ajax_referer('start_optimization_nonce', 'nonce');
 
-        $optimized_images = $this->fetcher->get_optimized_images();
+        $optimized_images = $this->fetcher->get_optimized_images_for_restore();
         $results = [];
         $is_complete = empty($optimized_images);
 
@@ -94,15 +94,15 @@ class BulkRestore extends Singleton
         
         // If transient expired or doesn't exist, get current total
         if (false === $initial_total) {
-            $initial_total = $this->fetcher->get_total_optimized_images_count();
+            $initial_total = $this->fetcher->get_total_optimized_images_count_for_restore();
             set_transient($this->transient_key, $initial_total, HOUR_IN_SECONDS);
         }
 
         // Get current total of remaining optimized images
-        $current_total = $this->fetcher->get_total_optimized_images_count();
+        $current_total = $this->fetcher->get_total_optimized_images_count_for_restore();
         
         // Calculate restored images
-        $restored_count = $initial_total - $current_total;
+        $restored_count = absint($initial_total - $current_total);
         
         // Calculate progress based on initial total
         $progress = $initial_total > 0 ? 
@@ -121,7 +121,7 @@ class BulkRestore extends Singleton
                     $result['status'] = 'success';
                     $result['message'] = 'Image restored successfully';
                 } else {
-                    $result['message'] = 'Failed to restore image';
+                    $result['message'] = 'Failed to restore image. Backup file is missing.';
                 }
             } catch (\Exception $e) {
                 $result['message'] = $e->getMessage();
