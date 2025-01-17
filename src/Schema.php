@@ -74,4 +74,9 @@ class Schema extends Singleton
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
     }
+
+    public function truncate_reoptimization_table() {
+        global $wpdb;
+        $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}" . self::REOPTIMIZATION_TABLE_NAME);
+    }
 }
