@@ -223,9 +223,7 @@ class ImageOptimizerOptions extends Singleton
 
         // Clear processed IDs if re-optimization is complete
         if ($re_optimize && $is_complete) {
-            error_log('TRUNCATing new');
-            global $wpdb;
-            $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME);
+            (Schema::get_instance())->truncate_reoptimization_table();
         }
 
         wp_send_json_success([
