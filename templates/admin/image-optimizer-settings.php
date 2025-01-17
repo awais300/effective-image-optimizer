@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Admin settings page template for the Effective Image Optimizer plugin.
  * 
@@ -125,8 +126,8 @@ if (!defined('ABSPATH')) exit; ?>
             <div class="optimization-container">
                 <h3><?php _e('Start Optimization', 'text-domain'); ?></h3>
                 <p>
-                    <?php 
-                    _e('Click the button below to start the optimization process.', 'text-domain'); 
+                    <?php
+                    _e('Click the button below to start the optimization process.', 'text-domain');
                     ?>
                 </p>
                 <button id="start-optimization-button" class="button button-primary">
@@ -159,31 +160,31 @@ if (!defined('ABSPATH')) exit; ?>
 
             <div class="optimization-stats-container">
                 <p id="get-stats-button" class="button button-secondary">
-                   <a href="" onclick="window.location.reload(); return false;"><?php _e('Reload', 'text-domain'); ?></a>
+                    <a href="" onclick="window.location.reload(); return false;"><?php _e('Reload', 'text-domain'); ?></a>
                 </p>
 
                 <!-- Unoptimized Images Notice -->
-                <?php if($has_unoptimized_images): ?>
+                <?php if ($has_unoptimized_images): ?>
                     <div id="unoptimized-notice" class="notice notice-warning">
                         <?php _e('We found some unoptimized images in your media library. Click "Start Optimization" to optimize them.', 'text-domain'); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <!-- Stats Display -->
                 <div id="stats-display" class="stats-card">
                     <h3><?php _e('Optimization Statistics', 'text-domain'); ?></h3>
-                    
+
                     <div class="stats-grid">
                         <!-- Total Savings Section -->
                         <div class="stats-section">
                             <h4><?php _e('Total Savings', 'text-domain'); ?></h4>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('WebP Savings:', 'text-domain'); ?></span>
-                                <span id="webp-savings" class="stat-value"><?php echo size_format($stats->total_webp_savings, 2) ?: '-';?></span>
+                                <span id="webp-savings" class="stat-value"><?php echo size_format($stats->total_webp_savings, 2) ?: '-'; ?></span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('Normal Savings:', 'text-domain'); ?></span>
-                                <span id="normal-savings" class="stat-value"><?php echo size_format($stats->total_normal_savings, 2) ?: '-';?></span>
+                                <span id="normal-savings" class="stat-value"><?php echo size_format($stats->total_normal_savings, 2) ?: '-'; ?></span>
                             </div>
                         </div>
 
@@ -192,11 +193,11 @@ if (!defined('ABSPATH')) exit; ?>
                             <h4><?php _e('Conversions', 'text-domain'); ?></h4>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('WebP Images:', 'text-domain'); ?></span>
-                                <span id="webp-conversions" class="stat-value"><?php echo $stats->total_webp_conversions ?: '-';?></span>
+                                <span id="webp-conversions" class="stat-value"><?php echo $stats->total_webp_conversions ?: '-'; ?></span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label"><?php _e('PNG to JPG:', 'text-domain'); ?></span>
-                                <span id="png-jpg-conversions" class="stat-value"><?php echo $stats->total_png_to_jpg_conversions ?: '-';?></span>
+                                <span id="png-jpg-conversions" class="stat-value"><?php echo $stats->total_png_to_jpg_conversions ?: '-'; ?></span>
                             </div>
                         </div>
                     </div>
@@ -214,7 +215,7 @@ if (!defined('ABSPATH')) exit; ?>
             <div class="optimization-container">
                 <h3><?php _e('Bulk Restore Images', 'text-domain'); ?></h3>
                 <p><?php _e('Click the button below to restore all optimized images to their original versions.', 'text-domain'); ?></p>
-                
+
                 <button id="start-restore-button" class="button button-primary">
                     <?php _e('Start Restore', 'text-domain'); ?>
                 </button>
@@ -225,8 +226,8 @@ if (!defined('ABSPATH')) exit; ?>
                         <span id="restore-status-text">Restoring images...</span>
                     </div>
                     <div class="progress-bar-container">
-                        <div id="restore-progress-bar" class="progress-bar" role="progressbar" 
-                             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div id="restore-progress-bar" class="progress-bar" role="progressbar"
+                            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                     <div id="restore-progress-text" class="progress-text"></div>
                 </div>

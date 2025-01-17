@@ -21,7 +21,8 @@ class OptimizationStatsManager extends Singleton
      *
      * @since 1.0.0
      */
-    public function __construct() {
+    public function __construct()
+    {
         add_action('awp_image_optimization_completed', [$this, 'track_stats'], 10, 2);
     }
 
@@ -81,7 +82,7 @@ class OptimizationStatsManager extends Singleton
             $webp_conversions
         ));
     }
-    
+
     /**
      * Get optimization stats for a specific attachment.
      *

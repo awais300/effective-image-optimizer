@@ -31,18 +31,14 @@ abstract class Singleton
      * 
      * @access protected
      */
-    protected function __construct()
-    {
-    }
+    protected function __construct() {}
 
     /**
      * Protected clone method to prevent cloning of the instance.
      * 
      * @access protected
      */
-    protected function __clone()
-    {
-    }
+    protected function __clone() {}
 
     /**
      * Protected wakeup method to prevent unserializing of the instance.
@@ -68,7 +64,8 @@ abstract class Singleton
      * @return static The singleton instance
      * @throws \Exception If parameters provided after initialization
      */
-    public static function get_instance(...$params) {
+    public static function get_instance(...$params)
+    {
         $class = static::class;
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new $class(...$params); // Parameters used only once
@@ -102,9 +99,7 @@ abstract class Singleton
      * @deprecated since 1.0.0 Used only by get_instance_old()
      * @access public
      */
-    function on_construct()
-    {
-    }
+    function on_construct() {}
 
     /**
      * Alias for get_instance().

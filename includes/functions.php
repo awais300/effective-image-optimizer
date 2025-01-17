@@ -51,14 +51,15 @@ function get_default_optimizer_settings()
  * @param mixed $mix The variable to debug
  * @param bool $log Whether to write to error log instead of screen output
  */
-function dd($mix, $log = 0) {
-    if($log == false) {
+function dd($mix, $log = 0)
+{
+    if ($log == false) {
         echo "<pre>";
         print_r($mix);
         echo "</pre>";
     }
 
-    if($log == true) {
+    if ($log == true) {
         error_log('WriteLog:');
         error_log(print_r($mix, 1));
     }

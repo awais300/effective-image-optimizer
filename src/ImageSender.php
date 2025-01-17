@@ -47,7 +47,8 @@ class ImageSender extends Singleton
      * @access private
      * @return string|null The API key if set, null otherwise
      */
-    private function get_api_key() {
+    private function get_api_key()
+    {
         if ($this->api_key === null) {
             $this->api_key = get_optimizer_settings('api_key');
         }

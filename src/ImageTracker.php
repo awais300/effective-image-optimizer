@@ -65,7 +65,7 @@ class ImageTracker extends Singleton
     public function create_backup($attachment_id)
     {
         $setting_backup = get_optimizer_settings('backup');
-        if($setting_backup === 'no') {
+        if ($setting_backup === 'no') {
             return;
         }
         //$file_path = get_attached_file($attachment_id);
@@ -234,6 +234,11 @@ class ImageTracker extends Singleton
         }
     }
 
+    /**
+     * Track a processed image for reoptimization by inserting its ID into the database.
+     *
+     * @param int $image_id The ID of the processed image to track for reoptimization.
+     */
     public function track_processed_image_for_reoptimization($image_id)
     {
 
@@ -244,19 +249,36 @@ class ImageTracker extends Singleton
         );
     }
 
-    public function backup_exists($attachment_id) {
+    /**
+     * Check if a backup file exists for a given attachment ID.
+     *
+     * @param int $attachment_id The ID of the attachment to check for backup.
+     * @return bool True if backup file exists, false otherwise.
+     */
+    public function backup_exists($attachment_id)
+    {
         $relative_backup_path = get_post_meta($attachment_id, '_awp_io_backup_path', true);
         $uploads_dir = wp_upload_dir();
         $backup_path = $uploads_dir['basedir'] . '/' . $relative_backup_path;
 
-        if(!empty($relative_backup_path) && is_file($backup_path)) {
+        if (!empty($relative_backup_path) && is_file($backup_path)) {
             return true;
         } else {
             return false;
         }
     }
 
-    public function remove_restore_attempt_meta($attachment_id, $optimization_data) {
+    /**
+     * Remove the '_awp_io_restore_attempt' meta data for a specific attachment.
+     *
+     * This function is used to remove the '_awp_io_restore_attempt' meta data associated with a specific attachment ID.
+     * This allows for a new restore attempt to be made again.
+     *
+     * @param int $attachment_id The ID of the attachment to remove the meta data from.
+     * @param array $optimization_data Additional data related to the optimization process (not used in this function).
+     */
+    public function remove_restore_attempt_meta($attachment_id, $optimization_data)
+    {
         // If meta exist while doing optimization remove it, so, restore attempt can be made again.
         delete_post_meta($attachment_id, '_awp_io_restore_attempt');
     }

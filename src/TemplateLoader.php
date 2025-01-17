@@ -14,7 +14,8 @@ defined('ABSPATH') || exit;
  * @package AWP\IO
  * @since 1.0.0
  */
-class TemplateLoader extends Singleton {
+class TemplateLoader extends Singleton
+{
 
     /**
      * Loads and optionally outputs a template file.
@@ -31,7 +32,8 @@ class TemplateLoader extends Singleton {
      * @return string|void The template output if $echo is false, void if true
      * @throws \Exception If the template file does not exist
      */
-    public function get_template($template_name = '', $args = array(), $template_path = '', $echo = false) {
+    public function get_template($template_name = '', $args = array(), $template_path = '', $echo = false)
+    {
         $output = null;
 
         $template_path = $template_path . $template_name;
