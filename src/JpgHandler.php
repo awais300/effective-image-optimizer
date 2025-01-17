@@ -1,4 +1,5 @@
 <?php
+
 namespace AWP\IO;
 
 /**
@@ -11,7 +12,7 @@ namespace AWP\IO;
  * @package AWP\IO
  * @since 1.0.0
  */
-class JpgHandler 
+class JpgHandler
 {
     /**
      * Initialize JPEG handling functionality.
@@ -55,10 +56,10 @@ class JpgHandler
             // Check if any size was converted to JPG
             $converted = false;
             foreach ($optimization_data as $size_data) {
-                if(isset($size_data['webp']) && get_optimizer_settings('deliver_next_gen_images') === 'yes') {
+                if (isset($size_data['webp']) && get_optimizer_settings('deliver_next_gen_images') === 'yes') {
                     return false;
                 }
-                
+
                 if (!empty($size_data['converted_to_jpg'])) {
                     $converted = true;
                     break;
@@ -75,11 +76,11 @@ class JpgHandler
         $upload_dir = wp_upload_dir();
         $image_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $image_url);
         $jpg_path = preg_replace('/\.(png|PNG)$/i', '.jpg', $image_path);
-        
+
         if (file_exists($jpg_path)) {
             return str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $jpg_path);
         }
-        
+
         return false;
     }
 
@@ -97,18 +98,18 @@ class JpgHandler
     {
         // Regular expression to find image tags with PNG sources
         $pattern = '/<img[^>]+src=([\'"])?([^\'"\s>]+\.(?:png|PNG))([\'"]\s)?[^>]*>/i';
-        
+
         return preg_replace_callback($pattern, function ($matches) {
             $img_tag = $matches[0];
             $src = $matches[2];
-            
+
             // Check if JPG version exists
             $jpg_url = $this->get_jpg_version($src);
             if ($jpg_url) {
                 // Replace src with JPG version
                 $img_tag = str_replace($src, $jpg_url, $img_tag);
             }
-            
+
             return $img_tag;
         }, $content);
     }
@@ -138,7 +139,7 @@ class JpgHandler
                 }
             }
         }
-        
+
         return $sources;
     }
 
@@ -168,7 +169,7 @@ class JpgHandler
                 $image[0] = $jpg_url;
             }
         }
-        
+
         return $image;
     }
 }

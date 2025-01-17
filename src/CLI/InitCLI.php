@@ -1,4 +1,5 @@
 <?php
+
 namespace AWP\IO\CLI;
 
 use WP_CLI;

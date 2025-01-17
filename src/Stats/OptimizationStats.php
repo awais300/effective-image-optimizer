@@ -57,12 +57,13 @@ class OptimizationStats extends Singleton
      *
      * @return array Status information about the calculation process
      */
-    public function init_stats_calculation() {
+    public function init_stats_calculation()
+    {
         $task = get_option($this->task_key);
-        
+
         if ($task && $task['status'] === 'completed') {
             $new_images_count = $this->get_new_images_count($task['last_id']);
-            
+
             if ($new_images_count > 0) {
                 // Update task to process only new images
                 $task['status'] = 'processing';
@@ -76,10 +77,10 @@ class OptimizationStats extends Singleton
                     'png_to_jpg_conversions' => 0
                 ];
                 $task['started_at'] = time();
-                
+
                 update_option($this->task_key, $task);
                 wp_schedule_single_event(time(), 'awp_process_stats_batch');
-                
+
                 return [
                     'status' => 'processing',
                     'progress' => [
@@ -91,7 +92,7 @@ class OptimizationStats extends Singleton
                     'has_more' => true
                 ];
             }
-            
+
             // No new images, return existing stats
             return [
                 'status' => 'completed',
@@ -154,7 +155,8 @@ class OptimizationStats extends Singleton
      * 
      * Handles timeout management and schedules next batch if necessary.
      */
-    public function process_batch() {
+    public function process_batch()
+    {
         $task = get_option($this->task_key);
         if (!$task || $task['status'] !== 'processing') {
             return;
@@ -164,7 +166,7 @@ class OptimizationStats extends Singleton
         $max_execution_time = apply_filters('awp_stats_processing_timeout', 10); // 10 seconds
 
         $batch = $this->get_new_images_since($task['last_id']);
-        
+
         if (empty($batch)) {
             $this->complete_processing($task);
             return;
@@ -255,21 +257,18 @@ class OptimizationStats extends Singleton
      *
      * @param array $task The current processing task data
      */
-    public function complete_processing($task) {
+    public function complete_processing($task)
+    {
         // Merge existing stats with new stats
         if (!empty($task['existing_stats'])) {
             $task['stats'] = [
-                'total_webp_savings' => 
-                    ($task['existing_stats']['total_webp_savings'] ?? 0) + 
+                'total_webp_savings' => ($task['existing_stats']['total_webp_savings'] ?? 0) +
                     $task['stats']['total_webp_savings'],
-                'total_normal_savings' => 
-                    ($task['existing_stats']['total_normal_savings'] ?? 0) + 
+                'total_normal_savings' => ($task['existing_stats']['total_normal_savings'] ?? 0) +
                     $task['stats']['total_normal_savings'],
-                'webp_conversions' => 
-                    ($task['existing_stats']['webp_conversions'] ?? 0) + 
+                'webp_conversions' => ($task['existing_stats']['webp_conversions'] ?? 0) +
                     $task['stats']['webp_conversions'],
-                'png_to_jpg_conversions' => 
-                    ($task['existing_stats']['png_to_jpg_conversions'] ?? 0) + 
+                'png_to_jpg_conversions' => ($task['existing_stats']['png_to_jpg_conversions'] ?? 0) +
                     $task['stats']['png_to_jpg_conversions']
             ];
         }
@@ -277,7 +276,7 @@ class OptimizationStats extends Singleton
         $task['status'] = 'completed';
         $task['completed_at'] = time();
         $task['total_optimized'] = $this->fetcher->get_total_optimized_images_count();
-        
+
         update_option($this->task_key, $task);
     }
 
@@ -327,7 +326,8 @@ class OptimizationStats extends Singleton
      * @param array|null $task Optional task data to use instead of fetching from database
      * @return array Status information including progress and current stats
      */
-    public function get_processing_status($task = null) {
+    public function get_processing_status($task = null)
+    {
         if (!$task) {
             $task = get_option($this->task_key);
         }
@@ -349,8 +349,8 @@ class OptimizationStats extends Singleton
             'progress' => [
                 'processed' => $task['processed_count'] ?? 0,
                 'total' => $task['total_images'] ?? 0,
-                'percentage' => $task['total_images'] > 0 
-                    ? round(($task['processed_count'] / $task['total_images']) * 100) 
+                'percentage' => $task['total_images'] > 0
+                    ? round(($task['processed_count'] / $task['total_images']) * 100)
                     : 0
             ],
             'stats' => $task['stats'] ?? []
@@ -362,8 +362,10 @@ class OptimizationStats extends Singleton
         }
 
         // Indicate if more processing is needed
-        if ($task['status'] === 'processing' && 
-            ($task['processed_count'] ?? 0) < ($task['total_images'] ?? 0)) {
+        if (
+            $task['status'] === 'processing' &&
+            ($task['processed_count'] ?? 0) < ($task['total_images'] ?? 0)
+        ) {
             $response['has_more'] = true;
         }
 

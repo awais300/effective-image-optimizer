@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Effective Image Optimizer
  * Plugin URI: https://awaiswp.is-a-fullstack.dev/
@@ -31,13 +32,13 @@
 
 namespace AWP\IO;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly.
+if (! defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
 }
 
 // Define plugin constants
-if ( ! defined( 'EIP_CUST_PLUGIN_FILE' ) ) {
-    define( 'EIP_CUST_PLUGIN_FILE', __FILE__ );
+if (! defined('EIP_CUST_PLUGIN_FILE')) {
+    define('EIP_CUST_PLUGIN_FILE', __FILE__);
 }
 
 // Autoload plugin classes
@@ -52,7 +53,7 @@ Bootstrap::get_instance();
  */
 function effective_image_optimizer_on_activate()
 {
-	$schema = Schema::get_instance();
+    $schema = Schema::get_instance();
 
     $schema->create_optimization_stats_table();
     $schema->create_reoptimization_table();
@@ -63,11 +64,5 @@ register_activation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_
 /**
  * Deactivation hook.
  */
-function effective_image_optimizer_on_deactivate()
-{
-}
+function effective_image_optimizer_on_deactivate() {}
 register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\effective_image_optimizer_on_deactivate');
-
-
-/*delete_transient('bulk_restore_total_images');
-exit;*/

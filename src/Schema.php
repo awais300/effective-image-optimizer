@@ -57,6 +57,11 @@ class Schema extends Singleton
         dbDelta($sql);
     }
 
+    /**
+     * Creates a database table for reoptimization records if it does not already exist.
+     * 
+     * @return void
+     */
     public function create_reoptimization_table()
     {
         global $wpdb;
@@ -75,7 +80,12 @@ class Schema extends Singleton
         dbDelta($sql);
     }
 
-    public function truncate_reoptimization_table() {
+
+    /**
+     * Truncates the reoptimization table by deleting all rows.
+     */
+    public function truncate_reoptimization_table()
+    {
         global $wpdb;
         $wpdb->query("TRUNCATE TABLE {$wpdb->prefix}" . self::REOPTIMIZATION_TABLE_NAME);
     }

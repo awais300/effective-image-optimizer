@@ -43,7 +43,7 @@ class BulkRestore extends Singleton
     {
         $this->fetcher = ImageFetcher::get_instance();
         $this->tracker = ImageTracker::get_instance();
-        
+
         add_action('wp_ajax_start_bulk_restore', [$this, 'handle_bulk_restore']);
         add_action('wp_ajax_init_bulk_restore', [$this, 'init_bulk_restore']);
     }
@@ -63,7 +63,7 @@ class BulkRestore extends Singleton
 
         // Get initial total of optimized images
         $total_optimized = $this->fetcher->get_total_optimized_images_count_for_restore();
-        
+
         // Store this number for progress calculation
         set_transient($this->transient_key, $total_optimized, HOUR_IN_SECONDS);
 
@@ -91,7 +91,7 @@ class BulkRestore extends Singleton
 
         // Get the initial total from transient
         $initial_total = get_transient($this->transient_key);
-        
+
         // If transient expired or doesn't exist, get current total
         if (false === $initial_total) {
             $initial_total = $this->fetcher->get_total_optimized_images_count_for_restore();
@@ -100,13 +100,13 @@ class BulkRestore extends Singleton
 
         // Get current total of remaining optimized images
         $current_total = $this->fetcher->get_total_optimized_images_count_for_restore();
-        
+
         // Calculate restored images
         $restored_count = absint($initial_total - $current_total);
-        
+
         // Calculate progress based on initial total
-        $progress = $initial_total > 0 ? 
-            round(($restored_count / $initial_total) * 100) : 
+        $progress = $initial_total > 0 ?
+            round(($restored_count / $initial_total) * 100) :
             100;
 
         foreach ($optimized_images as $attachment_id) {

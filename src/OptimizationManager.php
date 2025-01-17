@@ -97,7 +97,7 @@ class OptimizationManager extends Singleton
                         $this->tracker->create_backup($attachment_id);
                     }
 
-                    if(!$re_optimize) {
+                    if (!$re_optimize) {
                         $this->tracker->create_backup($attachment_id);
                     }
 
@@ -143,13 +143,13 @@ class OptimizationManager extends Singleton
     {
         try {
             $images = $this->fetcher->get_attachment_images($attachment_id);
-            
+
             // If backup already exist thene skip backup creation during re-optimization
             if ($re_optimize && $this->tracker->backup_exists($attachment_id) === false) {
                 $this->tracker->create_backup($attachment_id);
             }
 
-            if(!$re_optimize) {
+            if (!$re_optimize) {
                 $this->tracker->create_backup($attachment_id);
             }
 
@@ -202,12 +202,12 @@ class OptimizationManager extends Singleton
         if (!isset($metadata['sizes'])) {
             $metadata['sizes'] = [];
         }
-        
+
         foreach ($results as $result) {
             if (isset($result['error'])) {
                 continue;
             }
-            
+
             // Calculate stats for this specific image size
             $size_data = [
                 'total_saved' => $result['bytes_saved'],
@@ -222,7 +222,7 @@ class OptimizationManager extends Singleton
             if (isset($result['dimensions'])) {
                 $size_data['width'] = $result['dimensions']['width'];
                 $size_data['height'] = $result['dimensions']['height'];
-                
+
                 // Update metadata dimensions based on image type
                 if ($result['image_type'] === 'full' || $result['image_type'] === 'original') {
                     // Update main image dimensions & filesize
@@ -255,18 +255,18 @@ class OptimizationManager extends Singleton
             // Determine paths and save both versions when converted
             if ($result['image_type'] === 'full' || $result['image_type'] === 'original') {
                 $file_path = $base_path;
-                
+
                 // For original images, we might need to save to a different path
                 if ($result['image_type'] === 'original') {
                     $file_path = $upload_dir . '/' . $result['file_name'];
                 }
-                
+
                 if ($result['converted_to_jpg']) {
                     // Save JPG version alongside PNG
                     $jpg_path = preg_replace('/\.(png|PNG)$/', '.jpg', $file_path);
                     file_put_contents($jpg_path, base64_decode($result['optimized_content']));
                     $size_data['jpg_path'] = str_replace(wp_get_upload_dir()['basedir'] . '/', '', $jpg_path);
-                    
+
                     // Update metadata file type if converted to jpg
                     /*if ($result['image_type'] === 'full') {
                         $metadata['file'] = basename($jpg_path);
@@ -285,7 +285,7 @@ class OptimizationManager extends Singleton
                     file_put_contents($jpg_path, base64_decode($result['optimized_content']));
                     $size_data['jpg_path'] = str_replace(wp_get_upload_dir()['basedir'] . '/', '', $jpg_path);
 
-                    
+
                     // Update metadata for thumbnail if converted to jpg
                     /*if (isset($metadata['sizes'][$result['image_size']])) {
                         $metadata['sizes'][$result['image_size']]['file'] = basename($jpg_path);
@@ -296,7 +296,7 @@ class OptimizationManager extends Singleton
                     file_put_contents($file_path, base64_decode($result['optimized_content']));
                 }
             }
-            
+
             $optimization_data[] = $size_data;
         }
 

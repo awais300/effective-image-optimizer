@@ -133,7 +133,7 @@ class MediaLibraryOptimizer
 
         if ($is_optimized) {
 
-            if($this->tracker->backup_exists($post->ID)) {
+            if ($this->tracker->backup_exists($post->ID)) {
                 $html .= '<button type="button" class="button restore-image">' .
                     esc_html__('Restore Original', 'awp-io') .
                     '<span class="spinner"></span>' .
@@ -141,9 +141,9 @@ class MediaLibraryOptimizer
             }
 
             $html .= '<button type="button" class="button reoptimize-image">' .
-            esc_html__('ReOptimize Image', 'awp-io') .
-            '<span class="spinner"></span>' .
-            '</button>';
+                esc_html__('ReOptimize Image', 'awp-io') .
+                '<span class="spinner"></span>' .
+                '</button>';
 
             if ($optimization_data) {
                 $html .= '<div class="optimization-stats">' .
@@ -246,15 +246,15 @@ class MediaLibraryOptimizer
         <div class="optimization-controls" data-id="<?php echo esc_attr($attachment_id); ?>">
             <?php if ($is_optimized) : ?>
 
-                <?php if($this->tracker->backup_exists($attachment_id)): ?>
+                <?php if ($this->tracker->backup_exists($attachment_id)): ?>
                     <button class="button restore-image">
                         <?php _e('Restore Original', 'awp-io'); ?>
                         <span class="spinner"></span>
                     </button>
                 <?php endif; ?>
-                
 
-                 <button class="button reoptimize-image">
+
+                <button class="button reoptimize-image">
                     <?php _e('ReOptimize Image', 'awp-io'); ?>
                     <span class="spinner"></span>
                 </button>
@@ -273,7 +273,7 @@ class MediaLibraryOptimizer
         </div>
         <?php
     }
-    
+
     /**
      * Generates HTML markup for displaying optimization statistics.
      *

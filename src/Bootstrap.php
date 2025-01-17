@@ -138,14 +138,14 @@ class Bootstrap
     {
         $optimizer = ImageOptimizerOptions::get_instance();
         $optimizer->initialize_hooks();
-        
+
         new MediaLibraryOptimizer();
 
         OptimizationStatsManager::get_instance();
         BulkRestore::get_instance();
 
         $setting_deliver_next_gen_images = $optimizer->get_optimizer_settings('deliver_next_gen_images');
-        if($setting_deliver_next_gen_images === 'yes') {
+        if ($setting_deliver_next_gen_images === 'yes') {
             new WebpHandler();
         }
 

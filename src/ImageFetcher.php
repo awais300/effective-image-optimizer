@@ -50,13 +50,20 @@ class ImageFetcher extends Singleton
         return $this->batch_size;
     }
 
+    /**
+     * Retrieves the total count of unoptimized images that need re-optimization.
+     *
+     * This method queries the database to count the number of unoptimized images that require re-optimization.
+     *
+     * @return int The total count of unoptimized images needing re-optimization.
+     */
     public function get_total_re_unoptimized_count()
     {
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
             FROM {$this->db->posts} p
             INNER JOIN {$this->db->postmeta} opt ON p.ID = opt.post_id AND opt.meta_key = '_awp_io_optimized'
-            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME. " r ON p.ID = r.image_id
+            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME . " r ON p.ID = r.image_id
             WHERE p.post_type = 'attachment'
             AND p.post_mime_type LIKE 'image/%'
             AND r.image_id IS NULL
@@ -76,7 +83,7 @@ class ImageFetcher extends Singleton
         if ($re_optimize) {
             return $this->get_total_re_unoptimized_count();
         }
-        
+
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
             FROM {$this->db->posts} p
@@ -87,13 +94,20 @@ class ImageFetcher extends Singleton
         ");
     }
 
+    /**
+     * Retrieves a list of image IDs that need to be reoptimized.
+     *
+     * This method queries the database to find image IDs that require reoptimization based on certain criteria.
+     *
+     * @return array List of image IDs to be reoptimized.
+     */
     public function get_reoptimize_images()
     {
         return $this->db->get_col($this->db->prepare(
             "SELECT p.ID
             FROM {$this->db->posts} p
             INNER JOIN {$this->db->postmeta} opt ON p.ID = opt.post_id AND opt.meta_key = '_awp_io_optimized'
-            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME. " r ON p.ID = r.image_id
+            LEFT JOIN {$this->db->prefix}" . Schema::REOPTIMIZATION_TABLE_NAME . " r ON p.ID = r.image_id
             WHERE p.post_type = 'attachment'
             AND p.post_mime_type LIKE 'image/%'
             AND r.image_id IS NULL
@@ -171,7 +185,7 @@ class ImageFetcher extends Singleton
      * @since 1.0.0
      * @return int Number of optimized images
      */
-    public function get_total_optimized_images_count() 
+    public function get_total_optimized_images_count()
     {
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
@@ -224,7 +238,7 @@ class ImageFetcher extends Singleton
      * @since 1.0.0
      * @return int Number of optimized images without _awp_io_restore_attempt
      */
-    public function get_total_optimized_images_count_for_restore() 
+    public function get_total_optimized_images_count_for_restore()
     {
         return (int) $this->db->get_var("
             SELECT COUNT(p.ID)
@@ -251,7 +265,7 @@ class ImageFetcher extends Singleton
      * @since 1.0.0
      * @return bool True if unoptimized images exist, false otherwise
      */
-    public function has_unoptimized_images() 
+    public function has_unoptimized_images()
     {
         $count = (int) $this->db->get_var("
             SELECT COUNT(p.ID)
@@ -289,17 +303,17 @@ class ImageFetcher extends Singleton
         $attachment_meta = wp_get_attachment_metadata($attachment_id);
         $upload_dir = wp_upload_dir();
         $base_dir = $upload_dir['basedir'] . '/';
-        
+
         // Get both full and original paths
         $full_path = get_attached_file($attachment_id);
         $original_path = function_exists('wp_get_original_image_path') ? wp_get_original_image_path($attachment_id) : null;
-        
+
         // Add the full-sized image
         $images[] = [
             'path' => $full_path,
             'type' => 'full'
         ];
-        
+
         // Add original image only if it's different from the full-sized image
         if ($original_path && $original_path !== $full_path) {
             $images[] = [
@@ -307,22 +321,22 @@ class ImageFetcher extends Singleton
                 'type' => 'original'
             ];
         }
-        
+
         // Check if thumbnail compression is enabled
         $setting_thumbnail_compression = get_optimizer_settings('thumbnail_compression');
         if ($setting_thumbnail_compression === 'no') {
             return $images;
         }
-        
+
         // Get excluded thumbnail sizes from settings
         $excluded_sizes = get_optimizer_settings('exclude_thumbnail_sizes');
         if (!is_array($excluded_sizes)) {
             $excluded_sizes = [];
         }
-        
+
         // Allow filtering of excluded thumbnail sizes
         $excluded_sizes = apply_filters('awp_image_optimizer_excluded_thumbnails', $excluded_sizes, $attachment_id);
-        
+
         // Add thumbnails
         if (isset($attachment_meta['sizes'])) {
             foreach ($attachment_meta['sizes'] as $size => $size_info) {
@@ -330,7 +344,7 @@ class ImageFetcher extends Singleton
                 if (in_array($size, $excluded_sizes)) {
                     continue;
                 }
-                
+
                 $file = $base_dir . dirname($attachment_meta['file']) . '/' . $size_info['file'];
                 $images[] = [
                     'path' => $file,
@@ -339,7 +353,7 @@ class ImageFetcher extends Singleton
                 ];
             }
         }
-        
+
         return $images;
     }
 }
