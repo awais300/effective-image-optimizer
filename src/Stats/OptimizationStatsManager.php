@@ -63,21 +63,25 @@ class OptimizationStatsManager extends Singleton
             }
         }
 
-        // Insert stats into the table
+        // Insert or update stats in the table using a single query
         $table_name = $wpdb->prefix . Schema::HISTORY_TABLE_NAME;
 
-        $wpdb->replace(
-            $table_name,
-            [
-                'attachment_id' => $attachment_id,
-                'normal_savings' => $normal_savings,
-                'webp_savings' => $webp_savings,
-                'png_to_jpg_conversions' => $png_to_jpg_conversions,
-                'webp_conversions' => $webp_conversions,
-            ]
-        );
+        $wpdb->query($wpdb->prepare(
+            "INSERT INTO $table_name (attachment_id, normal_savings, webp_savings, png_to_jpg_conversions, webp_conversions)
+             VALUES (%d, %d, %d, %d, %d)
+             ON DUPLICATE KEY UPDATE
+             normal_savings = normal_savings + VALUES(normal_savings),
+             webp_savings = webp_savings + VALUES(webp_savings),
+             png_to_jpg_conversions = png_to_jpg_conversions + VALUES(png_to_jpg_conversions),
+             webp_conversions = webp_conversions + VALUES(webp_conversions)",
+            $attachment_id,
+            $normal_savings,
+            $webp_savings,
+            $png_to_jpg_conversions,
+            $webp_conversions
+        ));
     }
-
+    
     /**
      * Get optimization stats for a specific attachment.
      *
