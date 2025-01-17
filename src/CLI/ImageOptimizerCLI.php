@@ -7,6 +7,7 @@ use AWP\IO\ImageSender;
 use AWP\IO\ImageTracker;
 use AWP\IO\OptimizationManager;
 use WP_CLI;
+use AWP\IO\Schema;
 
 /**
  * Command-line interface for the Image Optimizer plugin.
@@ -186,10 +187,10 @@ class ImageOptimizerCLI
 
         // Create progress bar
         $progress = \WP_CLI\Utils\make_progress_bar('Restoring images', $images_to_process);
-        
+
         while ($this->processed_images < $images_to_process) {
             $images = $this->fetcher->get_optimized_images_for_restore();
-            
+
             if (empty($images)) {
                 break; // No more images to process
             }
@@ -201,7 +202,7 @@ class ImageOptimizerCLI
 
                 try {
                     $success = $this->tracker->restore_image($attachment_id);
-                    
+
                     if ($success) {
                         if ($this->verbose) {
                             WP_CLI::line(sprintf('✓ Successfully restored image ID: %d', $attachment_id));
@@ -255,12 +256,18 @@ class ImageOptimizerCLI
      * 
      * [--batch-size=<number>]
      * : Optional. Number of images to process in this batch.
+     *
+     * [--re-optimize]
+     * : Optional. Re-optimize all optimized images in the media library.
      * 
      * [--dry-run]
      * : Optional. Show how many images would be optimized without actually optimizing them.
      * 
      * [--verbose]
      * : Optional. Show detailed optimization results for each image and its thumbnails.
+     * 
+     * [--attachment_id=<ids>]
+     * : Optional. Comma-separated list of attachment IDs to optimize.
      * 
      * ## EXAMPLES
      * 
@@ -269,6 +276,9 @@ class ImageOptimizerCLI
      * 
      *     wp awp-io optimize --all --verbose
      *     Optimize all unoptimized images with detailed progress output.
+     *
+     *     wp awp-io optimize --all --re-optimize
+     *     Re-optimize all optimized images.
      * 
      *     wp awp-io optimize --batch-size=50
      *     Optimize a batch of 50 images.
@@ -278,6 +288,9 @@ class ImageOptimizerCLI
      * 
      *     wp awp-io optimize --dry-run
      *     Show how many images would be optimized without actually optimizing them.
+     * 
+     *     wp awp-io optimize --attachment_id=123,34,45
+     *     Optimize specific images by their attachment IDs.
      * 
      * @when after_wp_load
      */
@@ -289,26 +302,51 @@ class ImageOptimizerCLI
             return;
         }
 
+        $re_optimize = isset($assoc_args['re-optimize']);
+
         // Set verbose mode
         $this->verbose = isset($assoc_args['verbose']);
 
-        // Get total count of unoptimized images
-        $total_images = $this->fetcher->get_total_unoptimized_count();
+        // Handle attachment IDs if provided
+        $attachment_ids = [];
+        if (isset($assoc_args['attachment_id'])) {
+            $attachment_ids = array_map('intval', explode(',', $assoc_args['attachment_id']));
+
+            if (count($attachment_ids) === 0) {
+                WP_CLI::success('No images found to optimize.');
+                return;
+            }
+        }
+
+        // Get total count of images to optimize
+        if (!empty($attachment_ids)) {
+            $total_images = count($attachment_ids);
+        } else {
+            $total_images = $this->fetcher->get_total_unoptimized_count($re_optimize);
+        }
 
         if ($total_images === 0) {
-            WP_CLI::success('No unoptimized images found.');
+            WP_CLI::success('No images found to optimize.');
             return;
         }
 
         // Handle dry run
         if (isset($assoc_args['dry-run'])) {
-            WP_CLI::line(sprintf('Found %d unoptimized images that would be processed.', $total_images));
+            if ($re_optimize) {
+                WP_CLI::line(sprintf('Found %d images to re-optimize to be processed.', $total_images));
+            } else {
+                if (!empty($attachment_ids)) {
+                    WP_CLI::line(sprintf('Found %d attachment IDs to be processed.', $total_images));
+                } else {
+                    WP_CLI::line(sprintf('Found %d unoptimized images that would be processed.', $total_images));
+                }
+            }
             return;
         }
 
-        // Check if either --all or --batch-size is provided
-        if (!isset($assoc_args['all']) && !isset($assoc_args['batch-size'])) {
-            WP_CLI::error('Either --all or --batch-size parameter is required. Use --dry-run to see how many images would be optimized.');
+        // Check if either --all, --batch-size, or --attachment_id is provided
+        if (!isset($assoc_args['all']) && !isset($assoc_args['batch-size']) && empty($attachment_ids)) {
+            WP_CLI::error('Either --all, --batch-size, or --attachment_id parameter is required. Use --dry-run to see how many images would be optimized.');
             return;
         }
 
@@ -323,7 +361,15 @@ class ImageOptimizerCLI
             return;
         }
 
-        WP_CLI::line(sprintf('Found %d unoptimized images.', $total_images));
+        if ($re_optimize) {
+            WP_CLI::line(sprintf('Found %d images to re-optimize.', $total_images));
+        } else {
+            if (!empty($attachment_ids)) {
+                WP_CLI::line(sprintf('Found %d attachment IDs to be processed.', $total_images));
+            } else {
+                WP_CLI::line(sprintf('Found %d unoptimized images.', $total_images));
+            }
+        }
 
         if (isset($assoc_args['batch-size'])) {
             WP_CLI::line(sprintf('Will process %d images in this run.', $images_to_process));
@@ -333,38 +379,67 @@ class ImageOptimizerCLI
 
         // Create progress bar
         $progress = \WP_CLI\Utils\make_progress_bar('Optimizing images', $images_to_process);
-        
-        while ($this->processed_images < $images_to_process) {
-            $results = $this->optimization_manager->optimize_batch();
 
-            if (empty($results)) {
-                break; // No more images to process
-            }
+        if (!empty($attachment_ids)) {
+            // Optimize specific attachment IDs
+            foreach ($attachment_ids as $attachment_id) {
+                // Only process if its an image.
+                if (wp_attachment_is_image($attachment_id)) {
+                    $result = $this->optimization_manager->optimize_single_image($attachment_id, $re_optimize);
 
-            foreach ($results as $result) {
-                if ($result['status'] === 'success') {
-                    $this->process_optimization_result($result);
-                    $progress->tick();
-                    $this->processed_images++;
+                    if ($result['status'] === 'success') {
+                        $this->process_optimization_result($result);
+                        $progress->tick();
+                        $this->processed_images++;
+                    } else {
+                        $this->failed_images++;
+                        WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
+                    }
                 } else {
-                    $this->failed_images++;
-                    WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
+                    WP_CLI::line(sprintf('Attachment ID "%d" is not an image', $attachment_id));
+                }
+            }
+        } else {
+            // Optimize in batches
+            while ($this->processed_images < $images_to_process) {
+                $results = $this->optimization_manager->optimize_batch($re_optimize);
+
+                if (empty($results)) {
+                    break; // No more images to process
+                }
+
+                foreach ($results as $result) {
+                    if ($result['status'] === 'success') {
+                        $this->process_optimization_result($result);
+                        $progress->tick();
+                        $this->processed_images++;
+                    } else {
+                        $this->failed_images++;
+                        WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
+                    }
                 }
             }
         }
 
         $progress->finish();
 
+        // Clear processed IDs if re-optimization is complete
+        if ($re_optimize) {
+            (Schema::get_instance())->truncate_reoptimization_table();
+        }
+
         // Display final statistics
         $this->display_final_stats();
 
         // Show remaining images message if applicable
-        $remaining = $total_images - $this->processed_images;
-        if ($remaining > 0 && !isset($assoc_args['all'])) {
-            WP_CLI::line(sprintf(
-                'There are still %d unoptimized images remaining. Run the command again to process more.',
-                $remaining
-            ));
+        if (!isset($assoc_args['attachment_id'])) {
+            $remaining = $total_images - $this->processed_images;
+            if ($remaining > 0 && !isset($assoc_args['all'])) {
+                WP_CLI::line(sprintf(
+                    'There are still %d unoptimized images remaining. Run the command again to process more.',
+                    $remaining
+                ));
+            }
         }
     }
 
@@ -382,7 +457,7 @@ class ImageOptimizerCLI
     {
         // Get optimization data from post meta
         $optimization_data = get_post_meta($result['id'], '_awp_io_optimization_data', true);
-        
+
         // In non-verbose mode, only show basic progress
         if (!$this->verbose) {
             foreach ($optimization_data as $data) {
@@ -393,34 +468,34 @@ class ImageOptimizerCLI
             }
             return;
         }
-        
+
         // In verbose mode, show detailed information
         WP_CLI::line(sprintf(
             'Optimizing image ID: %s and its respective thumbnails',
             $result['id']
         ));
-        
+
         if (!empty($optimization_data)) {
             foreach ($optimization_data as $data) {
                 if (isset($data['total_saved'])) {
                     $this->total_saved_bytes += $data['total_saved'];
-                    
+
                     // Add WebP savings if available
                     $webp_saved = isset($data['webp']['bytes_saved']) ? $data['webp']['bytes_saved'] : 0;
                     $this->total_saved_bytes += $webp_saved;
-                    
+
                     // Output individual image statistics
                     $filename = basename($data['file_name']);
                     $saved_kb = round($data['total_saved'] / 1024, 2);
                     $percent = $data['percent_saved'];
-                    
+
                     $output = sprintf(
                         '  ✓ %s - Saved: %s KB (%s%%)',
                         $filename,
                         $saved_kb,
                         $percent
                     );
-                    
+
                     // Add WebP savings information if available
                     if ($webp_saved > 0) {
                         $webp_saved_kb = round($webp_saved / 1024, 2);
@@ -431,7 +506,7 @@ class ImageOptimizerCLI
                             $webp_percent
                         );
                     }
-                    
+
                     WP_CLI::line($output);
                 }
             }
