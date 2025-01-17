@@ -156,7 +156,7 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (!response.success) {
-                    handleError('Server returned an error: ' + (response.data?.message || 'Unknown error'));
+                    handleError('Server returned an error: ' + (response.data ? .message || 'Unknown error'));
                     return;
                 }
 
@@ -221,6 +221,7 @@ jQuery(document).ready(function($) {
 
     $(document).ready(function() {
         function handleOptimizationAction($button, action) {
+            spinner_enable($button);
             const $container = $button.closest('.optimization-controls');
             const attachmentId = $container.data('id');
 
@@ -246,13 +247,16 @@ jQuery(document).ready(function($) {
                         // Reload the page to show updated status
                         window.location.reload();
                     } else {
+                        spinner_disable();
                         alert(response.data.message || wpeio_data.i18n.error);
                     }
                 },
                 error: function() {
                     alert(wpeio_data.i18n.networkError);
+                    spinner_disable();
                 },
                 complete: function() {
+                    spinner_disable();
                     $container.removeClass('processing');
                     $button.prop('disabled', false);
                 }
@@ -277,6 +281,16 @@ jQuery(document).ready(function($) {
             handleOptimizationAction($(this), 'optimize_single_image');
         });
     });
+
+    function spinner_enable($button) {
+        $button.children('.spinner').first().css({
+            display: 'inline-block'
+        });
+    }
+
+    function spinner_disable() {
+        $('.optimization-controls .spinner').hide();
+    }
 })(jQuery);
 
 
@@ -325,7 +339,7 @@ jQuery(document).ready(function($) {
                 }
 
                 initialTotal = response.data.total_images;
-                
+
                 // Reset state
                 isRestoring = true;
                 totalRestored = 0;
@@ -371,8 +385,8 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (!response.success) {
-                    handleRestoreError('Server returned an error: ' + 
-                        (response.data?.message || 'Unknown error'));
+                    handleRestoreError('Server returned an error: ' +
+                        (response.data ? .message || 'Unknown error'));
                     return;
                 }
 
@@ -391,7 +405,7 @@ jQuery(document).ready(function($) {
                 }
 
                 // Update progress message
-                const progressMessage = 
+                const progressMessage =
                     `Restored: ${data.restored_count} of ${data.initial_total} | Errors: ${totalErrors} | Progress: ${data.progress}%`;
                 updateRestoreProgress(data.progress, progressMessage);
 
