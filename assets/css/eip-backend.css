@@ -5,7 +5,7 @@
     width: 80%;
 }
 
-#optimization{
+#optimization {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -27,7 +27,8 @@
     color: #1d2327;
 }
 
-input[type=checkbox], input[type=radio] {
+input[type=checkbox],
+input[type=radio] {
     margin: initial;
 }
 
@@ -151,7 +152,7 @@ input[type=checkbox], input[type=radio] {
 }
 
 .optimization-controls.processing .spinner {
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .optimization-controls button {
@@ -204,9 +205,11 @@ input[type=checkbox], input[type=radio] {
     padding: 8px;
     position: absolute;
     z-index: 1;
-    bottom: 125%; /* Position above the icon */
+    bottom: 125%;
+    /* Position above the icon */
     left: 50%;
-    margin-left: -100px; /* Center the tooltip */
+    margin-left: -100px;
+    /* Center the tooltip */
     opacity: 0;
     transition: opacity 0.3s, visibility 0.3s;
 }
@@ -362,11 +365,11 @@ input[type=checkbox], input[type=radio] {
     background: #fff;
     padding: 20px;
     border: 1px solid #ccd0d4;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
     border-radius: 4px;
 }
 
-#get-stats-button a{
+#get-stats-button a {
     text-decoration: none;
 }
 
