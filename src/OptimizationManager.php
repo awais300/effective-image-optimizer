@@ -128,41 +128,6 @@ class OptimizationManager extends Singleton
         return $results;
     }
 
-   
-    public function optimize_batch_old()
-    {
-        $attachment_ids = $this->fetcher->get_unoptimized_images();
-        $results = [];
-
-        if (!empty($attachment_ids)) {
-            foreach ($attachment_ids as $attachment_id) {
-                try {
-                    $images = $this->fetcher->get_attachment_images($attachment_id);
-                    $this->tracker->create_backup($attachment_id);
-                    $optimization_results = $this->sender->send_images($attachment_id, $images);
-
-                    $this->process_optimization_results($attachment_id, $optimization_results);
-                    $this->processed_count++;
-
-                    $results[] = [
-                        'id' => $attachment_id,
-                        'status' => 'success',
-                        'message' => 'Images optimized successfully',
-                    ];
-                } catch (\Exception $e) {
-                    $results[] = [
-                        'id' => $attachment_id,
-                        'status' => 'error',
-                        'message' => $e->getMessage(),
-                    ];
-                    error_log("Image optimization failed for ID {$attachment_id}: " . $e->getMessage());
-                }
-            }
-        }
-
-        return $results;
-    }
-
     /**
      * Optimizes a single image from the media library.
      *
