@@ -3,12 +3,12 @@
 /**
  * Plugin Name: Effective Image Optimizer
  * Plugin URI: https://awaiswp.is-a-fullstack.dev/
- * Description: Optimize and compress images in WordPress media library efficiently.
+ * Description: Compress Images Effortlessly –  Faster Loads, Better SEO, Smoother Browsing!
  * Author: AWP - Muhammad Awais
  * Author URI: https://awaiswp.is-a-fullstack.dev/contact/
  * Version: 1.0.0
  * Requires at least: 5.0
- * Requires PHP: 7.2
+ * Requires PHP: 7.4
  * License: GPL v3 or later
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  *
