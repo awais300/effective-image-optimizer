@@ -111,8 +111,6 @@ class ImageTracker extends Singleton
         $current_path = wp_get_original_image_path($attachment_id);
 
         if (is_file($backup_path)) {
-            error_log('backup exists');
-            error_log($backup_path);
             // Restore the original image
             copy($backup_path, $current_path);
 
@@ -195,9 +193,6 @@ class ImageTracker extends Singleton
     {
         $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
 
-        /*error_log('Reporting Data:');
-        error_log(print_r($optimization_data, true));*/
-
         if (!empty($optimization_data)) {
             $upload_dir = wp_upload_dir();
             $base_dir = $upload_dir['basedir'];
@@ -216,7 +211,6 @@ class ImageTracker extends Singleton
                 // Delete .webp file if it exists
                 if (isset($size_data['webp'])) {
                     $webp_path = $base_dir . '/' . $file_directory . $size_data['webp']['file_name'];
-                    error_log('webp: ' . $webp_path);
                     if (is_file($webp_path)) {
                         wp_delete_file($webp_path);
                     }
@@ -225,7 +219,6 @@ class ImageTracker extends Singleton
                 // Delete converted .jpg file if it exists
                 if (isset($size_data['jpg_path']) && $size_data['converted_to_jpg']) {
                     $jpg_path = $base_dir . '/' . $file_directory . $size_data['jpg_path'];
-                    error_log('jpg: ' . $jpg_path);
                     if (is_file($jpg_path)) {
                         wp_delete_file($jpg_path);
                     }
