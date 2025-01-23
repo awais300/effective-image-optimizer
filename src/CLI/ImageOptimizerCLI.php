@@ -391,6 +391,8 @@ class ImageOptimizerCLI
                         $this->process_optimization_result($result);
                         $progress->tick();
                         $this->processed_images++;
+                        //WP_CLI::line(sprintf('Optimized Attachment ID: "%d"', $attachment_id));
+                        //WP_CLI::line(sprintf('Processed "%d" attachments so far', $this->processed_images));
                     } else {
                         $this->failed_images++;
                         WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
@@ -413,6 +415,10 @@ class ImageOptimizerCLI
                         $this->process_optimization_result($result);
                         $progress->tick();
                         $this->processed_images++;
+                        
+                        WP_CLI::line(sprintf('Optimized Attachment ID: "%d" & Processed so far "%d"', $result['id'], $this->processed_images));
+                        //WP_CLI::line(sprintf('Processed "%d" attachments so far', $this->processed_images));
+                        
                     } else {
                         $this->failed_images++;
                         WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
