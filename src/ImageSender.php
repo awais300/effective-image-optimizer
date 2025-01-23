@@ -21,6 +21,13 @@ class ImageSender extends Singleton
     private $remote_url;
 
     /**
+     * Validate API key endpoint.
+     *
+     * @var string
+     */
+    private $remote_url_validate_api;
+
+    /**
      * API key for authentication with the remote server
      *
      * @var string
@@ -35,6 +42,8 @@ class ImageSender extends Singleton
     public function __construct()
     {
         $this->remote_url = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/optimize';
+        
+        $this->remote_url_validate_api = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/validate-api-key';
     }
 
     /**
@@ -181,22 +190,84 @@ class ImageSender extends Singleton
         // Send the request
         $response = wp_remote_post($this->remote_url, $args);
 
+        /*dd($response);
+        exit;*/
+
         if (is_wp_error($response)) {
             throw new \Exception('Request failed: ' . $response->get_error_message());
         }
 
-        $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            throw new \Exception('Request failed with status: ' . $response_code);
-        }
-
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            throw new \Exception('Request failed with status: ' . $response_code . ' Error Message: ' . $result['message']);
+        }
+
+        if ($response_code !== 200) {
+            // Handle server-side errors
+            if (isset($result['code']) && isset($result['message'])) {
+                // This is a WP_Error converted to JSON
+                throw new \Exception('Request failed: ' . $result['message'] . ' (Code: ' . $result['code'] . ')');
+            } else {
+                // Handle generic HTTP errors
+                throw new \Exception('Request failed with status: ' . $response_code);
+            }
+        }
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception('Invalid JSON response from server');
         }
 
         return $result;
+    }
+
+    /**
+     * Validate the API key by sending a test request to the remote server.
+     *
+     * @since 1.0.0
+     * @return bool True if the API key is valid, false otherwise.
+     */
+    public function validate_api_key()
+    {
+        // Prepare the request payload
+        $payload = json_encode([
+            'action' => 'validate_api_key',
+            'api_key' => $this->get_api_key(),
+        ]);
+
+        // Prepare the request arguments
+        $args = [
+            'timeout' => 10,
+            'headers' => [
+                'X-AWP-IO-API-Key' => $this->get_api_key(),
+                'X-AWP-IO-Site-URL' => get_site_url(),
+                'Content-Type' => 'application/json',
+                'Content-Length' => strlen($payload),
+            ],
+            'body' => $payload,
+        ];
+
+        // Send the request to the remote server
+        $response = wp_remote_post($this->remote_url_validate_api, $args);
+
+        // Check for local WP_Error (e.g., network issues)
+        if (is_wp_error($response)) {
+            error_log('API key validation failed: ' . $response->get_error_message());
+            return false;
+        }
+
+        // Retrieve the response code and body
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $response_data = json_decode($response_body, true);
+
+        // Check if the response is valid
+        if ($response_code === 200 && isset($response_data['success']) && $response_data['success'] === true) {
+            return true;
+        }
+
+        return false;
     }
 }

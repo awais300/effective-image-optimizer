@@ -156,11 +156,22 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (!response.success) {
-                    handleError('Server returned an error: ' + (response.data ? .message || 'Unknown error'));
+                    handleError('Server returned an error: ' + (response.data?.message || 'Unknown error'));
                     return;
                 }
 
                 const data = response.data;
+
+                // Check for "invalid api key" in the results message
+                if (data.results && data.results.message) {
+                    const message = data.results.message;
+                    const regex = /invalid api key/i;
+
+                    if (regex.test(message)) {
+                        handleError('Invalid API key detected. Please check your API key.');
+                        return; // Stop further processing if invalid API key is found
+                    }
+                }
 
                 // Process results
                 if (data.results && data.results.length > 0) {
@@ -386,7 +397,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (!response.success) {
                     handleRestoreError('Server returned an error: ' +
-                        (response.data ? .message || 'Unknown error'));
+                        (response.data?.message || 'Unknown error'));
                     return;
                 }
 

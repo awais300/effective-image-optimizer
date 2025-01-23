@@ -92,6 +92,15 @@ class OptimizationManager extends Singleton
                     $images = $this->fetcher->get_attachment_images($attachment_id);
                     $optimization_results = $this->sender->send_images($attachment_id, $images);
 
+                    if (isset($optimization_results[0]['error'])) {
+                        //error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
+                        return [
+                            'id' => $attachment_id,
+                            'status' => 'error',
+                            'message' => $optimization_results[0]['error']
+                        ];
+                    }
+
                     // If backup already exist thene skip backup creation during re-optimization
                     if ($re_optimize && $this->tracker->backup_exists($attachment_id) === false) {
                         $this->tracker->create_backup($attachment_id);
@@ -155,8 +164,16 @@ class OptimizationManager extends Singleton
 
             $optimization_results = $this->sender->send_images($attachment_id, $images);
 
-            $this->process_optimization_results($attachment_id, $optimization_results);
+            if (isset($optimization_results[0]['error'])) {
+                error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
+                return [
+                    'id' => $attachment_id,
+                    'status' => 'error',
+                    'message' => $optimization_results[0]['error']
+                ];
+            }
 
+            $this->process_optimization_results($attachment_id, $optimization_results);
             return [
                 'id' => $attachment_id,
                 'status' => 'success',
@@ -169,7 +186,6 @@ class OptimizationManager extends Singleton
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ];
-            error_log("Image optimization failed for ID {$attachment_id}: " . $e->getMessage());
         }
     }
 

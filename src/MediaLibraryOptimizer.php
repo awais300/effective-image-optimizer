@@ -412,6 +412,11 @@ class MediaLibraryOptimizer
             return;
         }
 
+        if (!$this->sender->validate_api_key()) {
+            wp_send_json_error(['message' => __('Invalid API key', 'awp-io')]);
+            return;
+        }
+
         $attachment_id = intval($_POST['attachment_id']);
         $re_optimize = (bool) intval($_POST['is_re_optimize']);
 
