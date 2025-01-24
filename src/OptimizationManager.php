@@ -91,14 +91,19 @@ class OptimizationManager extends Singleton
                 try {
                     $images = $this->fetcher->get_attachment_images($attachment_id);
                     $optimization_results = $this->sender->send_images($attachment_id, $images);
+                    
+                    //error_log('INoptimize_batch: ', 3 , '/home/yousellcomics/public_html/adebug.log');
+                    //error_log(print_r($optimization_results, true), 3 , '/home/yousellcomics/public_html/adebug.log');
 
                     if (isset($optimization_results[0]['error'])) {
                         //error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
-                        return [
+                        /*return [
                             'id' => $attachment_id,
                             'status' => 'error',
                             'message' => $optimization_results[0]['error']
-                        ];
+                        ];*/
+                        
+                        throw new \Exception("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
                     }
 
                     // If backup already exist thene skip backup creation during re-optimization
@@ -240,19 +245,20 @@ class OptimizationManager extends Singleton
                 $size_data['height'] = $result['dimensions']['height'];
 
                 // Update metadata dimensions based on image type
-                if ($result['image_type'] === 'full' || $result['image_type'] === 'original') {
+                //if ($result['image_type'] === 'full' || $result['image_type'] === 'original') {
+                if ($result['image_type'] === 'full') {
                     // Update main image dimensions & filesize
                     $metadata['width'] = $result['dimensions']['width'];
                     $metadata['height'] = $result['dimensions']['height'];
                     $metadata['filesize'] = $result['optimized_size'];
-                } else {
-                    // Update thumbnail dimensions & file size
-                    if (isset($metadata['sizes'][$result['image_size']])) {
-                        $metadata['sizes'][$result['image_size']]['width'] = $result['dimensions']['width'];
-                        $metadata['sizes'][$result['image_size']]['height'] = $result['dimensions']['height'];
-                        $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
+                } else if($result['image_type'] === 'original'){
+                        ;
+                } else if (isset($metadata['sizes'][$result['image_size']])) {
+                    // Handle thumbnails
+                    $metadata['sizes'][$result['image_size']]['width'] = $result['dimensions']['width'];
+                    $metadata['sizes'][$result['image_size']]['height'] = $result['dimensions']['height'];
+                    $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
                     }
-                }
             }
 
             // Handle WebP version if it exists
