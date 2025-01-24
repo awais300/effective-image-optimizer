@@ -199,12 +199,11 @@ class ImageSender extends Singleton
 
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
+        
+        //error_log('inSendSingleImage:', 3 , '/home/yousellcomics/public_html/adebug.log');
+        //error_log(print_r($result, true), 3 , '/home/yousellcomics/public_html/adebug.log');
 
         $response_code = wp_remote_retrieve_response_code($response);
-        if ($response_code !== 200) {
-            throw new \Exception('Request failed with status: ' . $response_code . ' Error Message: ' . $result['message']);
-        }
-
         if ($response_code !== 200) {
             // Handle server-side errors
             if (isset($result['code']) && isset($result['message'])) {
