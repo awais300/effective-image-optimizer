@@ -405,18 +405,21 @@ class ImageOptimizerCLI
             // Optimize in batches
             while ($this->processed_images < $images_to_process) {
                 $results = $this->optimization_manager->optimize_batch($re_optimize);
-
+                
+                //error_log('inCLI: ', 3 , '/home/yousellcomics/public_html/adebug.log');
+                //error_log(print_r($results, true), 3 , '/home/yousellcomics/public_html/adebug.log');
+                
                 if (empty($results)) {
                     break; // No more images to process
                 }
 
                 foreach ($results as $result) {
                     if ($result['status'] === 'success') {
-                        $this->process_optimization_result($result);
+                        //$this->process_optimization_result($result);
                         $progress->tick();
                         $this->processed_images++;
                         
-                        WP_CLI::line(sprintf('Optimized Attachment ID: "%d" & Processed so far "%d"', $result['id'], $this->processed_images));
+                        WP_CLI::line(sprintf('Optimized Attachment ID: "%d" & Processed so far "%d" attachments. Remaining attachments are: "%d" ', $result['id'], $this->processed_images, $images_to_process - $this->processed_images));
                         //WP_CLI::line(sprintf('Processed "%d" attachments so far', $this->processed_images));
                         
                     } else {
