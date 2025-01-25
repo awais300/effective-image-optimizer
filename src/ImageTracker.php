@@ -52,6 +52,21 @@ class ImageTracker extends Singleton
         update_post_meta($attachment_id, '_awp_io_optimized', true);
         update_post_meta($attachment_id, '_awp_io_optimization_data', $optimization_data);
     }
+    
+    /**
+     * Mark an image as failed.
+     *
+     * Updates post meta to indicate that an image has been failed to optimize
+     * and stores the failure data.
+     *
+     * @since 1.0.0
+     * @param int   $attachment_id    The ID of the attachment
+     * @param array $failed_data Data with failed reason
+     */
+    public function mark_as_failed($attachment_id, $failed_data)
+    {
+        update_post_meta($attachment_id, '_awp_io_optimization_failed_data', $failed_data);
+    }
 
     /**
      * Create a backup of the original image.
