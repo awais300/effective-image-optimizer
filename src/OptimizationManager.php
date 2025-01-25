@@ -103,7 +103,7 @@ class OptimizationManager extends Singleton
                             'message' => $optimization_results[0]['error']
                         ];*/
                         
-                        throw new \Exception("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
+                        //throw new \Exception("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
                     }
 
                     // If backup already exist thene skip backup creation during re-optimization
@@ -170,12 +170,12 @@ class OptimizationManager extends Singleton
             $optimization_results = $this->sender->send_images($attachment_id, $images);
 
             if (isset($optimization_results[0]['error'])) {
-                error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
+                /*error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
                 return [
                     'id' => $attachment_id,
                     'status' => 'error',
                     'message' => $optimization_results[0]['error']
-                ];
+                ];*/
             }
 
             $this->process_optimization_results($attachment_id, $optimization_results);
@@ -223,9 +223,12 @@ class OptimizationManager extends Singleton
         if (!isset($metadata['sizes'])) {
             $metadata['sizes'] = [];
         }
-
+            
+        $has_error = false;
+        
         foreach ($results as $result) {
             if (isset($result['error'])) {
+                $has_error = true;
                 continue;
             }
 
@@ -324,6 +327,10 @@ class OptimizationManager extends Singleton
 
         // Store optimization data in DB
         $this->tracker->mark_as_optimized($attachment_id, $optimization_data);
+        
+        if($has_error) {
+            $this->tracker->mark_as_failed($attachment_id, $results);
+        }
 
         // Update file size in metadata
         //$metadata['filesize'] = filesize($base_path);
