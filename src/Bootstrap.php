@@ -139,8 +139,12 @@ class Bootstrap
         $optimizer = ImageOptimizerOptions::get_instance();
         $optimizer->initialize_hooks();
 
-        new MediaLibraryOptimizer();
+        $setting_convert_to_webp_media_upload = $optimizer->get_optimizer_settings('convert_to_webp_media_upload');
+        if($setting_convert_to_webp_media_upload === 'yes') {
+            new WebpUploadConverter();
+        }
 
+        new MediaLibraryOptimizer();
         OptimizationStatsManager::get_instance();
         BulkRestore::get_instance();
 
