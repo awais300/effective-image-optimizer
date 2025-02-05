@@ -38,21 +38,59 @@ class ImageTracker extends Singleton
     }
 
     /**
-     * Mark an image as optimized.
-     *
-     * Updates post meta to indicate that an image has been optimized
-     * and stores the optimization data.
-     *
-     * @since 1.0.0
-     * @param int   $attachment_id    The ID of the attachment
-     * @param array $optimization_data Data about the optimization process
+     * Marks an attachment as optimized and updates its optimization data.
+     * 
+     * Updates or appends optimization data for different image sizes while maintaining
+     * original file sizes and accumulating total saved bytes across multiple optimizations.
+     * 
+     * @param int   $attachment_id     WordPress attachment ID
+     * @param array $optimization_data Array of optimization data with following structure:
+     *                                [
+     *                                    'total_saved'     => (int) Bytes saved in optimization
+     *                                    'total_original'   => (int) Original file size in bytes
+     *                                    'percent_saved'    => (float) Percentage of size reduction
+     *                                    'image_size'       => (string) WordPress image size name
+     *                                    'file_name'       => (string) Optimized image filename
+     *                                    'converted_to_jpg' => (bool) Whether converted to JPG
+     *                                ]
+     * @return void
      */
     public function mark_as_optimized($attachment_id, $optimization_data)
     {
+        //error_log('Initial Optimization Data for Attachment ID ' . $attachment_id . ': ' . print_r(get_post_meta($attachment_id, '_awp_io_optimization_data', true), true));
+
         update_post_meta($attachment_id, '_awp_io_optimized', true);
-        update_post_meta($attachment_id, '_awp_io_optimization_data', $optimization_data);
+        $existing_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
+
+        if (empty($existing_data)) {
+            update_post_meta($attachment_id, '_awp_io_optimization_data', $optimization_data);
+            //error_log('First-time Optimization Data for Attachment ID ' . $attachment_id . ': ' . print_r($optimization_data, true));
+            return;
+        }
+
+        $updated_data = $existing_data;
+
+        foreach ($optimization_data as $new_item) {
+            $existing_item_key = null;
+            foreach ($updated_data as $key => $existing_item) {
+                if ($existing_item['image_size'] === $new_item['image_size']) {
+                    $updated_data[$key]['total_saved'] = $existing_item['total_saved'] + $new_item['total_saved'];
+                    $updated_data[$key]['percent_saved'] =
+                        round(($updated_data[$key]['total_saved'] / $existing_item['total_original']) * 100, 2);
+                    $existing_item_key = $key;
+                    break;
+                }
+            }
+
+            if ($existing_item_key === null) {
+                $updated_data[] = $new_item;
+            }
+        }
+
+        update_post_meta($attachment_id, '_awp_io_optimization_data', $updated_data);
+        //error_log('Updated Optimization Data for Attachment ID ' . $attachment_id . ': ' . print_r($updated_data, true));
     }
-    
+
     /**
      * Mark an image as failed.
      *
