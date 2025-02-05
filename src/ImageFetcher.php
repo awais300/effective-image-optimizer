@@ -296,6 +296,9 @@ class ImageFetcher extends Singleton
      * @filter awp_image_optimizer_excluded_thumbnails Filters the list of excluded thumbnail sizes
      *         @param array $excluded_sizes Array of thumbnail size names to exclude
      *         @param int   $attachment_id  The attachment ID being processed
+     * @filter awp_image_optimizer_attachment_images Filters the final array of image data before returning
+     *         @param array $images        Array of image data including paths and size types
+     *         @param int   $attachment_id The attachment ID being processed
      */
     public function get_attachment_images($attachment_id)
     {
@@ -325,7 +328,7 @@ class ImageFetcher extends Singleton
         // Check if thumbnail compression is enabled
         $setting_thumbnail_compression = get_optimizer_settings('thumbnail_compression');
         if ($setting_thumbnail_compression === 'no') {
-            return $images;
+            return apply_filters('awp_image_optimizer_attachment_images', $images, $attachment_id);
         }
 
         // Get excluded thumbnail sizes from settings
@@ -354,6 +357,7 @@ class ImageFetcher extends Singleton
             }
         }
 
-        return $images;
+        // Allow filtering of the final image array
+        return apply_filters('awp_image_optimizer_attachment_images', $images, $attachment_id);
     }
 }
