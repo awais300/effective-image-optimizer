@@ -99,6 +99,17 @@ if (!defined('ABSPATH')) exit; ?>
                     </td>
                 </tr>
                 <tr>
+                    <th scope="row"><?php _e('Convert image to WebP on Upload', 'text-domain'); ?></th>
+                    <td>
+                        <label><input type="radio" name="convert_to_webp_media_upload" value="yes" <?php checked($settings['convert_to_webp_media_upload'], 'yes'); ?>> <?php _e('Yes', 'text-domain'); ?></label>
+                        <label><input type="radio" name="convert_to_webp_media_upload" value="no" <?php checked($settings['convert_to_webp_media_upload'], 'no'); ?>> <?php _e('No', 'text-domain'); ?></label>
+                        <p class="description"><?php _e('Automatically convert JPG, PNG (while preserving transparency), and GIF images to WebP upon upload. WebP is a next-generation format that offers smaller file sizes without compromising quality. For example, <code> example.jpg will be converted to example.webp.</code> If the <code>Optimize Media on Upload</code> option is set to <code>Yes</code> the plugin will further optimize the WebP image, reducing its size even more. (recommended).', 'text-domain'); ?></p>
+                        <?php if (!extension_loaded('gd') && !extension_loaded('imagick')): ?>
+                            <p><?php _e('<b>Note:</b> This feature requires either the PHP\'s GD or Imagick extension to be installed on the server. <code>None found.</code>', 'text-domain'); ?></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
                     <th scope="row"><?php _e('Convert PNG Images to JPEG', 'text-domain'); ?></th>
                     <td>
                         <label><input type="radio" name="convert_png_to_jpeg" value="yes" <?php checked($settings['convert_png_to_jpeg'], 'yes'); ?>> <?php _e('Yes', 'text-domain'); ?></label>
