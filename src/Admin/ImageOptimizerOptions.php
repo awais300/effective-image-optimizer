@@ -94,6 +94,7 @@ class ImageOptimizerOptions extends Singleton
         'next_gen_images' => 'no',
         'deliver_next_gen_images' => 'no',
         'optimize_media_upload' => 'no',
+        'convert_to_webp_media_upload' => 'no',
         'convert_png_to_jpeg' => 'no',
         'exclude_thumbnail_sizes' => array(),
     );
@@ -326,6 +327,7 @@ class ImageOptimizerOptions extends Singleton
             'next_gen_images'           => $this->sanitize_yes_no($_POST['next_gen_images']),
             'deliver_next_gen_images'   => $this->sanitize_yes_no($_POST['deliver_next_gen_images']),
             'optimize_media_upload'     => $this->sanitize_yes_no($_POST['optimize_media_upload']),
+            'convert_to_webp_media_upload'     => $this->sanitize_yes_no($_POST['convert_to_webp_media_upload']),
             'convert_png_to_jpeg'       => $this->sanitize_yes_no($_POST['convert_png_to_jpeg']),
             'exclude_thumbnail_sizes'   => array_map('sanitize_text_field', $_POST['exclude_thumbnail_sizes'] ?? array()),
         );
