@@ -293,13 +293,13 @@ class MediaLibraryOptimizer
             return '';
         }
 
-        $total_original = 0;
-        $total_saved = 0;
         $thumbnails = [];
         $has_webp = false;
         $converted_to_jpg = false;
-        $webp_total_saved = 0;
-        $use_webp_savings = true;  // Flag to determine if we should use WebP savings
+        $use_webp_savings = true;
+
+        // Variables for first non-thumbnail image stats
+        $main_image_stats = null;
 
         // First pass: check if all sizes have WebP versions
         foreach ($optimization_data as $data) {
@@ -310,29 +310,29 @@ class MediaLibraryOptimizer
         }
 
         foreach ($optimization_data as $data) {
-            $original = isset($data['total_original']) ? $data['total_original'] : 0;
-            $total_original += $original;
+            // Store stats for the first non-thumbnail image only
+            if (empty($data['image_size']) && $main_image_stats === null) {
+                $main_image_stats = [
+                    'original' => isset($data['total_original']) ? $data['total_original'] : 0,
+                    'saved' => $use_webp_savings && isset($data['webp'])
+                        ? (isset($data['webp']['bytes_saved']) ? $data['webp']['bytes_saved'] : 0)
+                        : (isset($data['total_saved']) ? $data['total_saved'] : 0),
+                    'percent' => $use_webp_savings && isset($data['webp'])
+                        ? (isset($data['webp']['percent_saved']) ? $data['webp']['percent_saved'] : 0)
+                        : (isset($data['percent_saved']) ? $data['percent_saved'] : 0)
+                ];
+            }
 
-            if ($use_webp_savings && isset($data['webp'])) {
-                // Calculate savings based on WebP
-                $webp_saved = isset($data['webp']['bytes_saved']) ? $data['webp']['bytes_saved'] : 0;
-                $total_saved += $webp_saved;
-
-                // Update thumbnail stats with WebP percentage
-                if (!empty($data['image_size'])) {
+            // Handle thumbnail stats
+            if (!empty($data['image_size'])) {
+                if ($use_webp_savings && isset($data['webp'])) {
                     $thumbnails[] = [
                         'size' => $data['image_size'],
                         'percent' => isset($data['webp']['percent_saved'])
                             ? $data['webp']['percent_saved']
                             : 0
                     ];
-                }
-            } else {
-                // Use normal savings
-                $saved = isset($data['total_saved']) ? $data['total_saved'] : 0;
-                $total_saved += $saved;
-
-                if (!empty($data['image_size'])) {
+                } else {
                     $thumbnails[] = [
                         'size' => $data['image_size'],
                         'percent' => isset($data['percent_saved'])
@@ -355,15 +355,14 @@ class MediaLibraryOptimizer
 
         ob_start();
 
-        // Calculate overall percentage
-        if ($total_original > 0) {
-            $percent = round(($total_saved / $total_original) * 100, 2);
+        // Only show stats if we found a main image
+        if ($main_image_stats !== null && $main_image_stats['original'] > 0) {
         ?>
             <div class="optimization-stats">
                 <div class="reduction-percent">
                     <?php echo sprintf(
                         __('Reduced by %s%%', 'awp-io'),
-                        $percent
+                        round($main_image_stats['percent'], 2)
                     ); ?>
                     <?php if ($use_webp_savings) : ?>
                         <span class="webp-savings">
