@@ -107,6 +107,9 @@ jQuery(document).ready(function($) {
     let totalOptimized = 0;
     let totalErrors = 0;
 
+    let processed_count = 0;
+    let total_unoptimized_count = 0;
+
     startButton.on('click', function(event) {
         event.preventDefault();
 
@@ -152,6 +155,8 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'start_optimization',
                 nonce: wpeio_data.nonce,
+                processed_count: processed_count,
+                total_unoptimized_count: total_unoptimized_count,
                 is_re_optimize: isReOptimize
             },
             success: function(response) {
@@ -175,6 +180,9 @@ jQuery(document).ready(function($) {
 
                 // Process results
                 if (data.results && data.results.length > 0) {
+                    processed_count =  data.processed_count + 1;
+                    total_unoptimized_count =  data.total_unoptimized_count;
+
                     data.results.forEach(result => {
                         if (result.status === 'success') {
                             totalOptimized++;
@@ -192,7 +200,7 @@ jQuery(document).ready(function($) {
                 // Continue if not complete
                 if (!data.is_complete) {
                     // Add a small delay between batches
-                    setTimeout(processNextBatch, 100);
+                    setTimeout(processNextBatch);
                 } else {
                     finishOptimization(data.message || `Optimization complete! Successfully optimized ${totalOptimized} images with ${totalErrors} errors.`);
                 }
@@ -422,7 +430,7 @@ jQuery(document).ready(function($) {
 
                 // Continue if not complete
                 if (!data.is_complete) {
-                    setTimeout(processNextRestoreBatch, 100);
+                    setTimeout(processNextRestoreBatch);
                 } else {
                     finishRestore(
                         `Restore complete! Successfully restored ${data.restored_count} images with ${totalErrors} errors.`

@@ -214,18 +214,25 @@ class ImageOptimizerOptions extends Singleton
 
         // Process current batch
         $results = $this->optimization_manager->optimize_batch($re_optimize);
-        $processed_count = $this->optimization_manager->get_processed_count();
+        //$processed_count = $this->optimization_manager->get_processed_count();
 
         // Recalculate total as it may have changed
         $remaining_unoptimized = $this->fetcher->get_total_unoptimized_count($re_optimize);
-        $total_processed = $total_unoptimized - $remaining_unoptimized;
+        $total_processed = isset($_POST['processed_count']) ? absint($_POST['processed_count']) : 0;
+
+        // Keep the total count on first run. This is for showing progress. Pass this this to AJAX response.
+        if ($total_processed === 0) {
+            $total_unoptimized_count = $total_unoptimized;
+        } else {
+            // Get total count again for AJAX request and pass it again to AJAX response.
+            $total_unoptimized_count = isset($_POST['total_unoptimized_count']) ? absint($_POST['total_unoptimized_count']) : 0;
+        }
 
         // Calculate progress
-        $progress = min(100, round(($total_processed / $total_unoptimized) * 100));
+        $progress = min(100, round(($total_processed / $total_unoptimized_count) * 100));
 
         // Determine if we're done
         $is_complete = $remaining_unoptimized === 0;
-
 
         // Clear processed IDs if re-optimization is complete
         if ($re_optimize && $is_complete) {
@@ -239,7 +246,8 @@ class ImageOptimizerOptions extends Singleton
             'results' => $results,
             'is_complete' => $is_complete,
             'total_unoptimized' => $remaining_unoptimized,
-            'processed_count' => $processed_count
+            'processed_count' => $total_processed,
+            'total_unoptimized_count' => $total_unoptimized_count,
         ]);
     }
 
