@@ -365,7 +365,7 @@ class ImageOptimizerOptions extends Singleton
 
         update_option(self::IMAGE_OPTIMIZER_SETTINGS, $settings);
 
-        wp_redirect(add_query_arg('page', 'image-optimizer', admin_url('options-general.php')));
+        wp_redirect(add_query_arg('page', 'effective-image-optimizer', admin_url('options-general.php')));
         exit;
     }
 

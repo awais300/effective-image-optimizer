@@ -42,7 +42,21 @@
     });
 })(jQuery);
 
-/*Setting Tabs*/
+/* Start optimization link*/
+jQuery(document).ready(function($) {
+    $('#optimization-tab').click(function(e) {
+        e.preventDefault();
+        $('.tab-content').hide();
+
+        $('.nav-tab').removeClass('nav-tab-active');
+        $('a[href="#optimization"]').addClass('nav-tab-active');
+
+        var target = $(this).attr('href');
+        $(target).show();
+    });    
+});
+
+/* Setting Tabs */
 jQuery(document).ready(function($) {
     // Check the URL fragment to determine the initial tab, default to #general
     var initialTab = window.location.hash || '#general';
@@ -53,15 +67,17 @@ jQuery(document).ready(function($) {
 
     // Activate the initial tab based on the URL fragment
     var $initialTab = $(`.nav-tab[href="${initialTab}"]`);
-    $initialTab.addClass('nav-tab-active');
-    $(initialTab).show();
+    if ($initialTab.length) {
+        $initialTab.addClass('nav-tab-active');
+        $(initialTab).show();
+    } else {
+        // If hash is invalid, default to #general
+        $('.nav-tab[href="#general"]').addClass('nav-tab-active');
+        $('#general').show();
+    }
 
     // Show or hide the submit button based on the initial tab
-    if (initialTab === '#optimization') {
-        $('#submit').hide();
-    } else {
-        $('#submit').show();
-    }
+    toggleSubmitButton(initialTab);
 
     // Event listener for tab clicks
     $('.nav-tab').on('click', function(event) {
@@ -78,20 +94,22 @@ jQuery(document).ready(function($) {
         var target = $(this).attr('href');
         $(target).show();
 
-        // Update the URL fragment to reflect the active tab
-        window.location.hash = target;
+        // Update the URL hash without causing the jump
+        history.replaceState(null, null, target);
 
         // Hide or show the submit button based on the opened tab
-        if (target === '#general' || target === '#advanced') {
+        toggleSubmitButton(target);
+    });
+
+    function toggleSubmitButton(tab) {
+        if (tab === '#general' || tab === '#advanced') {
             $('#submit').show();
         } else {
             $('#submit').hide();
         }
-    });
-
-    // Trigger a click on the initial tab to ensure it's fully activated
-    $initialTab.trigger('click');
+    }
 });
+
 
 /*Batch Image Optimization*/
 jQuery(document).ready(function($) {

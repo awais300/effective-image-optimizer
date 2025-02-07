@@ -177,7 +177,7 @@ if (!defined('ABSPATH')) exit; ?>
                 <!-- Unoptimized Images Notice -->
                 <?php if ($has_unoptimized_images): ?>
                     <div id="unoptimized-notice" class="notice notice-warning">
-                        <?php _e('We found some unoptimized images in your media library. Click "Start Optimization" to optimize them.', 'text-domain'); ?>
+                        <?php _e('We found some unoptimized images in your media library. Click <a id="optimization-tab" href="#optimization">Start Optimization</a> to optimize them.', 'text-domain'); ?>
                     </div>
                 <?php endif; ?>
 
