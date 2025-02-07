@@ -65,7 +65,7 @@ class BulkRestore extends Singleton
         $total_optimized = $this->fetcher->get_total_optimized_images_count_for_restore();
 
         // Store this number for progress calculation
-        set_transient($this->transient_key, $total_optimized, HOUR_IN_SECONDS);
+        set_transient($this->transient_key, $total_optimized, MONTH_IN_SECONDS);
 
         wp_send_json_success([
             'total_images' => $total_optimized
@@ -95,7 +95,7 @@ class BulkRestore extends Singleton
         // If transient expired or doesn't exist, get current total
         if (false === $initial_total) {
             $initial_total = $this->fetcher->get_total_optimized_images_count_for_restore();
-            set_transient($this->transient_key, $initial_total, HOUR_IN_SECONDS);
+            set_transient($this->transient_key, $initial_total, MONTH_IN_SECONDS);
         }
 
         // Get current total of remaining optimized images
