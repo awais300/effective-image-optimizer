@@ -125,7 +125,30 @@ class ImageOptimizerOptions extends Singleton
         add_action('admin_post_save_image_optimizer_options', array($this, 'save_settings'));
         add_action('admin_init', array($this, 'initialize_settings'));
         add_action('wp_ajax_start_optimization', array($this, 'start_optimization'));
+        add_filter('plugin_action_links', array($this, 'add_plugin_action_links'), 10, 2);
     }
+
+    /**
+     * Add a custom link near the "Deactivate" button.
+     *
+     * @param array  $links Existing plugin action links.
+     * @param string $file  Plugin file.
+     * @return array Modified plugin action links.
+     */
+    public function add_plugin_action_links($links, $file)
+    {
+        // Check if the current plugin is your plugin
+        if (EIP_CUST_PLUGIN_BASENAME === $file) {
+            // Generate the URL for the custom options page
+            $settings_url = admin_url('options-general.php?page=effective-image-optimizer');
+            // Add your custom link
+            $settings_link = '<a href="' . esc_url($settings_url) . '">Settings</a>';
+            array_push($links, $settings_link);
+        }
+
+        return $links;
+    }
+
 
     /**
      * Retrieves optimizer settings or a specific setting by name.
@@ -220,11 +243,11 @@ class ImageOptimizerOptions extends Singleton
         $remaining_unoptimized = $this->fetcher->get_total_unoptimized_count($re_optimize);
         $total_processed = isset($_POST['processed_count']) ? absint($_POST['processed_count']) : 0;
 
-        // Keep the total count on first run. This is for showing progress. Pass this this to AJAX response.
+        // Keep the total count on first run. This is for showing progress. Pass this to AJAX response.
         if ($total_processed === 0) {
             $total_unoptimized_count = $total_unoptimized;
         } else {
-            // Get total count again for AJAX request and pass it again to AJAX response.
+            // Get total count again from AJAX request and pass it again to AJAX response.
             $total_unoptimized_count = isset($_POST['total_unoptimized_count']) ? absint($_POST['total_unoptimized_count']) : 0;
         }
 
@@ -273,10 +296,10 @@ class ImageOptimizerOptions extends Singleton
     function admin_menu()
     {
         add_options_page(
-            __('Image Optimizer Settings', 'text-domain'),
-            __('Image Optimizer', 'text-domain'),
+            __('Effective Image Optimizer Settings', 'text-domain'),
+            __('Effective Image Optimizer', 'text-domain'),
             'manage_options',
-            'image-optimizer',
+            'effective-image-optimizer',
             array($this, 'settings_page')
         );
     }
