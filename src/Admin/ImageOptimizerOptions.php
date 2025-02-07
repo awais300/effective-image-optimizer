@@ -252,7 +252,7 @@ class ImageOptimizerOptions extends Singleton
         }
 
         // Calculate progress
-        $progress = min(100, round(($total_processed / $total_unoptimized_count) * 100));
+        $progress = min(100, round(($total_processed / $total_unoptimized_count) * 100, 2));
 
         // Determine if we're done
         $is_complete = $remaining_unoptimized === 0;
