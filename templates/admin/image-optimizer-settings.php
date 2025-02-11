@@ -99,7 +99,7 @@ if (!defined('ABSPATH')) exit; ?>
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><?php _e('Convert image to WebP on Upload', 'text-domain'); ?></th>
+                    <th scope="row"><?php _e('Convert Images to WebP on Upload', 'text-domain'); ?></th>
                     <td>
                         <label><input type="radio" name="convert_to_webp_media_upload" value="yes" <?php checked($settings['convert_to_webp_media_upload'], 'yes'); ?>> <?php _e('Yes', 'text-domain'); ?></label>
                         <label><input type="radio" name="convert_to_webp_media_upload" value="no" <?php checked($settings['convert_to_webp_media_upload'], 'no'); ?>> <?php _e('No', 'text-domain'); ?></label>
