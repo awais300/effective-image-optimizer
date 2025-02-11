@@ -171,7 +171,7 @@ if (!defined('ABSPATH')) exit; ?>
 
             <div class="optimization-stats-container">
                 <p id="get-stats-button" class="button button-secondary">
-                    <a href="" onclick="window.location.reload(); return false;"><?php _e('Reload', 'text-domain'); ?></a>
+                    <?php _e('Refresh Stats', 'text-domain'); ?>
                 </p>
 
                 <!-- Unoptimized Images Notice -->

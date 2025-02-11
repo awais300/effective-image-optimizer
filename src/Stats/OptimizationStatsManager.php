@@ -24,6 +24,35 @@ class OptimizationStatsManager extends Singleton
     public function __construct()
     {
         add_action('awp_image_optimization_completed', [$this, 'track_stats'], 10, 2);
+        add_action('wp_ajax_awp_io_get_stats', [$this, 'ajax_get_stats']);
+    }
+
+    /**
+     * Handle AJAX request to fetch stats.
+     *
+     * @since 1.0.0
+     */
+    public function ajax_get_stats()
+    {
+        // Check nonce for security
+        check_ajax_referer('start_optimization_nonce', 'nonce');
+
+        // Get the stats
+        $stats = $this->get_total_stats();
+
+        // Ensure all values are valid numbers
+        $total_normal_savings = isset($stats->total_normal_savings) ? (int) $stats->total_normal_savings : 0;
+        $total_webp_savings = isset($stats->total_webp_savings) ? (int) $stats->total_webp_savings : 0;
+        $total_webp_conversions = isset($stats->total_webp_conversions) ? (int) $stats->total_webp_conversions : 0;
+        $total_png_to_jpg_conversions = isset($stats->total_png_to_jpg_conversions) ? (int)$stats->total_png_to_jpg_conversions : 0;
+
+        // Send the response
+        wp_send_json_success([
+            'total_normal_savings' => $total_normal_savings,
+            'total_webp_savings' => $total_webp_savings,
+            'total_webp_conversions' => $total_webp_conversions,
+            'total_png_to_jpg_conversions' => $total_png_to_jpg_conversions,
+        ]);
     }
 
     /**

@@ -480,3 +480,68 @@ jQuery(document).ready(function($) {
         restoreSpinner.hide();
     }
 });
+
+/* Get optimization stats */
+jQuery(document).ready(function($) {
+    // Function to update stats via AJAX
+    function updateStats() {
+        $.ajax({
+            url: wpeio_data.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'awp_io_get_stats',
+                nonce: wpeio_data.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const stats = response.data;
+
+                    // Ensure all values are valid numbers
+                    const totalWebpSavings = typeof stats.total_webp_savings === 'number' ? stats.total_webp_savings : 0;
+                    const totalNormalSavings = typeof stats.total_normal_savings === 'number' ? stats.total_normal_savings : 0;
+                    const totalWebpConversions = typeof stats.total_webp_conversions === 'number' ? stats.total_webp_conversions : 0;
+                    const totalPngToJpgConversions = typeof stats.total_png_to_jpg_conversions === 'number' ? stats.total_png_to_jpg_conversions : 0;
+
+                    // Update the stats in the HTML
+                    $('#webp-savings').text(formatBytes(totalWebpSavings));
+                    $('#normal-savings').text(formatBytes(totalNormalSavings));
+                    $('#webp-conversions').text(totalWebpConversions);
+                    $('#png-jpg-conversions').text(totalPngToJpgConversions);
+
+                    // Update the last updated time
+                    const now = new Date();
+                    $('#last-updated').text('Last updated: ' + now.toLocaleTimeString());
+                } else {
+                    console.error('Failed to fetch stats:', response.data);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX request failed:', error);
+            }
+        });
+    }
+
+    // Function to format bytes into a human-readable format
+    function formatBytes(bytes, decimals = 2) {
+        if (typeof bytes !== 'number' || isNaN(bytes) || bytes === 0) {
+            return '0 Bytes'; // Handle invalid or zero values
+        }
+
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Attach the updateStats function to the button click event
+    $('#get-stats-button').on('click', function(e) {
+        e.preventDefault();
+        updateStats();
+    });
+
+    // Optionally, you can also update the stats automatically at regular intervals
+    setInterval(updateStats, 60000); // Update every 60 seconds
+});
