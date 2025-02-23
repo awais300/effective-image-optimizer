@@ -283,6 +283,56 @@ class ImageFetcher extends Singleton
     }
 
     /**
+     * Retrieves the total count of images that have failed optimization.
+     *
+     * Queries the database to find the total number of images that have
+     * failed optimization by checking for the presence of the
+     * `_awp_io_optimization_failed_data` meta key.
+     *
+     * @since 1.1.2
+     * @return int The total count of images that failed optimization.
+     */
+    public function get_failed_optimized_images_count()
+    {
+        $query = $this->db->prepare(
+            "SELECT COUNT(p.ID) 
+            FROM {$this->db->posts} p 
+            INNER JOIN {$this->db->postmeta} fail 
+                ON p.ID = fail.post_id 
+                AND fail.meta_key = '_awp_io_optimization_failed_data' 
+            WHERE p.post_type = 'attachment' 
+            AND p.post_mime_type LIKE 'image/%'"
+        );
+
+        return (int) $this->db->get_var($query);
+    }
+
+    /**
+     * Retrieves the IDs of all image attachments that have failed optimization.
+     *
+     * This method queries the database for all image attachments where the meta key
+     * '_awp_io_optimization_failed_data' exists, indicating that optimization failed.
+     * 
+     * @since 1.1.2
+     * @return array An array of post IDs for image attachments that failed optimization.
+     */
+    public function get_failed_optimized_images()
+    {
+        $query = $this->db->prepare(
+            "SELECT p.ID 
+            FROM {$this->db->posts} p 
+            INNER JOIN {$this->db->postmeta} fail 
+                ON p.ID = fail.post_id 
+                AND fail.meta_key = '_awp_io_optimization_failed_data' 
+            WHERE p.post_type = 'attachment' 
+            AND p.post_mime_type LIKE 'image/%' 
+            ORDER BY p.ID ASC"
+        );
+
+        return $this->db->get_col($query);
+    }
+
+    /**
      * Get all image sizes for a specific attachment.
      *
      * Retrieves paths to all available sizes of an image attachment,
