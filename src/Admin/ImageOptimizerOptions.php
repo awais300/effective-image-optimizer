@@ -97,6 +97,7 @@ class ImageOptimizerOptions extends Singleton
         'convert_to_webp_media_upload' => 'no',
         'convert_png_to_jpeg' => 'no',
         'exclude_thumbnail_sizes' => array(),
+        'cloudflare_api_token' => '',
     );
 
     /**
@@ -361,6 +362,7 @@ class ImageOptimizerOptions extends Singleton
             'convert_to_webp_media_upload'     => $this->sanitize_yes_no($_POST['convert_to_webp_media_upload']),
             'convert_png_to_jpeg'       => $this->sanitize_yes_no($_POST['convert_png_to_jpeg']),
             'exclude_thumbnail_sizes'   => array_map('sanitize_text_field', $_POST['exclude_thumbnail_sizes'] ?? array()),
+            'cloudflare_api_token'      => sanitize_text_field($_POST['cloudflare_api_token']),
         );
 
         update_option(self::IMAGE_OPTIMIZER_SETTINGS, $settings);
