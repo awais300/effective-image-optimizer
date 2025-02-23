@@ -91,9 +91,6 @@ class OptimizationManager extends Singleton
                 try {
                     $images = $this->fetcher->get_attachment_images($attachment_id);
                     $optimization_results = $this->sender->send_images($attachment_id, $images);
-                    
-                    //error_log('INoptimize_batch: ', 3 , '/home/yousellcomics/public_html/adebug.log');
-                    //error_log(print_r($optimization_results, true), 3 , '/home/yousellcomics/public_html/adebug.log');
 
                     if (isset($optimization_results[0]['error'])) {
                         //error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
@@ -102,7 +99,7 @@ class OptimizationManager extends Singleton
                             'status' => 'error',
                             'message' => $optimization_results[0]['error']
                         ];*/
-                        
+
                         //throw new \Exception("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
                     }
 
@@ -140,6 +137,30 @@ class OptimizationManager extends Singleton
         }
 
         return $results;
+    }
+
+    /**
+     * Resets optimization data for images that previously failed optimization.
+     *
+     * Retrieves a list of attachment IDs for images that failed optimization,
+     * and clears their existing optimization data to allow for re-attempting
+     * the optimization process.
+     *
+     * @since 1.1.2
+     * @return void This method does not return any value.
+     */
+    public function reset_failed_optimiztions_data()
+    {
+        $attachment_ids = $this->fetcher->get_failed_optimized_images();
+        if (!empty($attachment_ids)) {
+            foreach ($attachment_ids as $attachment_id) {
+                if ($this->tracker->should_restore($attachment_id) === true && $this->tracker->backup_exists($attachment_id) === true) {
+                    $this->tracker->restore_image($attachment_id);
+                    error_log('reset_failed_optimiztions_data() : restore_image called');
+                }
+                $this->tracker->clear_existing_optimization_data($attachment_id);
+            }
+        }
     }
 
     /**
@@ -223,10 +244,17 @@ class OptimizationManager extends Singleton
         if (!isset($metadata['sizes'])) {
             $metadata['sizes'] = [];
         }
-            
+
         $has_error = false;
-        
+        $failed_results = [];
+
         foreach ($results as $result) {
+            $temp_result = $result;
+            
+            unset($temp_result['optimized_content']);
+            unset($temp_result['webp']['content']);
+            $failed_results[] = $temp_result;
+
             if (isset($result['error'])) {
                 $has_error = true;
                 continue;
@@ -254,14 +282,13 @@ class OptimizationManager extends Singleton
                     $metadata['width'] = $result['dimensions']['width'];
                     $metadata['height'] = $result['dimensions']['height'];
                     $metadata['filesize'] = $result['optimized_size'];
-                } else if($result['image_type'] === 'original'){
-                        ;
+                } else if ($result['image_type'] === 'original') {;
                 } else if (isset($metadata['sizes'][$result['image_size']])) {
                     // Handle thumbnails
                     $metadata['sizes'][$result['image_size']]['width'] = $result['dimensions']['width'];
                     $metadata['sizes'][$result['image_size']]['height'] = $result['dimensions']['height'];
                     $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
-                    }
+                }
             }
 
             // Handle WebP version if it exists
@@ -327,9 +354,9 @@ class OptimizationManager extends Singleton
 
         // Store optimization data in DB
         $this->tracker->mark_as_optimized($attachment_id, $optimization_data);
-        
-        if($has_error) {
-            $this->tracker->mark_as_failed($attachment_id, $results);
+
+        if ($has_error) {
+            $this->tracker->mark_as_failed($attachment_id, $failed_results);
         }
 
         // Update file size in metadata
