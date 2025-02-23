@@ -263,6 +263,9 @@ class ImageOptimizerCLI
      * [--dry-run]
      * : Optional. Show how many images would be optimized without actually optimizing them.
      * 
+     * [--retry-failed-only]
+     * : Optional. Retry to optimize failed optimizations.
+     * 
      * [--verbose]
      * : Optional. Show detailed optimization results for each image and its thumbnails.
      * 
@@ -288,7 +291,10 @@ class ImageOptimizerCLI
      * 
      *     wp awp-io optimize --dry-run
      *     Show how many images would be optimized without actually optimizing them.
-     * 
+     *
+     *     wp awp-io optimize --retry-failed-only
+     *     Try to optimize again that were failed during optimization for some reason.
+     *     
      *     wp awp-io optimize --attachment_id=123,34,45
      *     Optimize specific images by their attachment IDs.
      * 
@@ -296,6 +302,7 @@ class ImageOptimizerCLI
      */
     public function optimize($args, $assoc_args)
     {
+        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
         // If no arguments provided, show help
         if (empty($assoc_args)) {
             WP_CLI::runcommand('help awp-io optimize');
@@ -303,6 +310,28 @@ class ImageOptimizerCLI
         }
 
         $re_optimize = isset($assoc_args['re-optimize']);
+
+        if (isset($assoc_args['retry-failed-only'])) {
+            // Get the total count of failed optimized images
+            $failed_count = $this->fetcher->get_failed_optimized_images_count();
+
+            // Display the count to the user
+            WP_CLI::log(sprintf('Found %d images that failed optimization.', $failed_count));
+
+            // Prompt the user for confirmation
+            if ($failed_count > 0) {
+                WP_CLI::confirm('Do you want to reset optimization data for these images and retry?', $assoc_args);
+
+                
+                // If the user confirms, reset the failed optimizations data
+                WP_CLI::log('Preparing...');
+                $this->optimization_manager->reset_failed_optimiztions_data();
+                WP_CLI::success('Optimization data reset successfully. Retrying optimization.');
+            } else {
+                WP_CLI::success('No failed optimizations found.');
+                return;
+            }
+        }
 
         // Set verbose mode
         $this->verbose = isset($assoc_args['verbose']);
@@ -375,8 +404,6 @@ class ImageOptimizerCLI
             WP_CLI::line(sprintf('Will process %d images in this run.', $images_to_process));
         }
 
-        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
-
         // Create progress bar
         $progress = \WP_CLI\Utils\make_progress_bar('Optimizing images', $images_to_process);
 
@@ -405,10 +432,10 @@ class ImageOptimizerCLI
             // Optimize in batches
             while ($this->processed_images < $images_to_process) {
                 $results = $this->optimization_manager->optimize_batch($re_optimize);
-                
+
                 //error_log('inCLI: ', 3 , '/home/yousellcomics/public_html/adebug.log');
                 //error_log(print_r($results, true), 3 , '/home/yousellcomics/public_html/adebug.log');
-                
+
                 if (empty($results)) {
                     break; // No more images to process
                 }
@@ -418,10 +445,10 @@ class ImageOptimizerCLI
                         //$this->process_optimization_result($result);
                         $progress->tick();
                         $this->processed_images++;
-                        
+
                         WP_CLI::line(sprintf('Optimized Attachment ID: "%d" & Processed so far "%d" attachments. Remaining attachments are: "%d" ', $result['id'], $this->processed_images, $images_to_process - $this->processed_images));
                         //WP_CLI::line(sprintf('Processed "%d" attachments so far', $this->processed_images));
-                        
+
                     } else {
                         $this->failed_images++;
                         WP_CLI::warning(sprintf('Failed to optimize image ID %d: %s', $result['id'], $result['message']));
