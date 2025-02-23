@@ -92,6 +92,56 @@ class ImageTracker extends Singleton
     }
 
     /**
+     * Clears all existing optimization-related meta data for a given attachment.
+     *
+     * This method deletes the following meta keys associated with the attachment:
+     * - '_awp_io_optimized'
+     * - '_awp_io_optimization_data'
+     * - '_awp_io_optimization_failed_data'
+     *
+     * This is useful for resetting or cleaning up optimization data, such as when
+     * retrying a failed optimization or removing outdated meta information.
+     *
+     * @param int $attachment_id The ID of the attachment whose optimization meta data should be cleared.
+     * @since 1.1.2
+     * @return void
+     */
+    public function clear_existing_optimization_data($attachment_id)
+    {
+        delete_post_meta($attachment_id, '_awp_io_optimized');
+        delete_post_meta($attachment_id, '_awp_io_optimization_data');
+        delete_post_meta($attachment_id, '_awp_io_optimization_failed_data');
+    }
+
+    /**
+     * Determines whether an attachment should be restored based on its optimization data.
+     *
+     * This method retrieves the optimization data from the '_awp_io_optimization_data' meta key
+     * for the given attachment ID. It checks if the optimization data contains a "success" element.
+     * If found, it returns `true` (indicating that restoration is needed). Otherwise, it returns `false`.
+     *
+     * @param int $attachment_id The ID of the attachment to check.
+     * @since 1.1.2
+     * @return bool True if the attachment should be restored, false otherwise.
+     */
+    public function should_restore($attachment_id)
+    {
+        // Get the optimization data from the post meta
+        $optimization_data = get_post_meta($attachment_id, '_awp_io_optimization_data', true);
+
+        if (is_array($optimization_data) && !empty($optimization_data)) {
+            foreach ($optimization_data as $data) {
+                if (isset($data['success'])) {
+                    error_log('should_restore() : found');
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Mark an image as failed.
      *
      * Updates post meta to indicate that an image has been failed to optimize
@@ -235,6 +285,8 @@ class ImageTracker extends Singleton
 
         // Clean up stats
         (OptimizationStatsManager::get_instance())->remove_stats_for_attachment($attachment_id);
+
+        do_action('awp_image_after_optimization_cleanup', $attachment_id);
     }
 
     /**
