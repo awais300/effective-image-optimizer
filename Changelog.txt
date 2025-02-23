@@ -1,0 +1,18 @@
+== Changelog ==
+
+= 1.1.2 =
+* Introduce Cloudflare integration: Updates the image on Cloudflare when optimizing or restoring an image.
+* Introduce retry mechanism for failed optimizations via WP CLI.
+
+= 1.0.0 =
+* Batch optimization of WordPress media library.
+* WebP conversion with browser detection.
+* PNG to JPG conversion.
+* Backup/Restore functionality.
+* Optimization statistics tracking.
+* WP-CLI integration.
+* Bulk restore original images.
+* Automatic optimization on upload.
+* Automatic convert image (JPG, PNG, GIF) to WebP before upload.
+* Next-gen image delivery.
+* Image resizing and EXIF removal.
