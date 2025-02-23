@@ -71,10 +71,9 @@ class MediaLibraryOptimizer
 
         // Add media modal integration
         add_filter('attachment_fields_to_edit', [$this, 'add_optimization_fields'], 10, 2);
-
         add_action('add_attachment', [$this, 'optimize_on_new_upload']);
     }
-
+    
     /**
      * Automatically optimizes newly uploaded images if enabled in settings.
      *
@@ -137,7 +136,7 @@ class MediaLibraryOptimizer
                 $html .= '<button type="button" class="button restore-image">' .
                     esc_html__('Restore Original', 'awp-io') .
                     '<span class="spinner"></span>' .
-                    '</button>;';
+                    '</button>&nbsp;';
             }
 
             $html .= '<button type="button" class="button reoptimize-image">' .
