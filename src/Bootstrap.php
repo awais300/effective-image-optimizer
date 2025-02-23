@@ -24,7 +24,7 @@ class Bootstrap
      *
      * @var string
      */
-    private $version = '1.0.0';
+    private $version = '1.1.2';
 
     /**
      * Singleton instance of the plugin.
@@ -138,6 +138,8 @@ class Bootstrap
     {
         $optimizer = ImageOptimizerOptions::get_instance();
         $optimizer->initialize_hooks();
+
+        new CFCachePurger(true);
 
         $setting_convert_to_webp_media_upload = $optimizer->get_optimizer_settings('convert_to_webp_media_upload');
         if($setting_convert_to_webp_media_upload === 'yes') {
