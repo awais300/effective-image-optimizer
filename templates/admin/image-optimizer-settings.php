@@ -129,6 +129,16 @@ if (!defined('ABSPATH')) exit; ?>
                         ?>
                     </td>
                 </tr>
+                <!-- Add the Cloudflare API Token Field -->
+                <tr>
+                    <th scope="row">
+                        <label for="cloudflare_api_token"><?php _e('Cloudflare Integration', 'text-domain'); ?></label>
+                    </th>
+                    <td>
+                        <input type="text" name="cloudflare_api_token" id="cloudflare_api_token" value="<?php echo esc_attr($settings['cloudflare_api_token']); ?>" class="regular-text">
+                        <p class="description"><?php _e('If your site uses Cloudflare, enter the API token above to ensure Effective Image Optimizer updates optimized and restored images automatically on Cloudflare.', 'text-domain'); ?></p>
+                    </td>
+                </tr>
             </table>
         </div>
 
