@@ -73,7 +73,7 @@ class MediaLibraryOptimizer
         add_filter('attachment_fields_to_edit', [$this, 'add_optimization_fields'], 10, 2);
         add_action('add_attachment', [$this, 'optimize_on_new_upload']);
     }
-    
+
     /**
      * Automatically optimizes newly uploaded images if enabled in settings.
      *
@@ -410,9 +410,10 @@ class MediaLibraryOptimizer
             return;
         }
 
-        if (!$this->sender->validate_api_key()) {
-            wp_send_json_error(['message' => __('Invalid API key', 'awp-io')]);
-            return;
+        try {
+            $this->sender->validate_api_key();
+        } catch (\Exception $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
         }
 
         $attachment_id = intval($_POST['attachment_id']);
@@ -476,5 +477,24 @@ class MediaLibraryOptimizer
                 'message' => __('Failed to restore image', 'awp-io')
             ]);
         }
+    }
+
+    /**
+     * Check if the optimization failed meta key exists and is not empty for a given attachment ID.
+     *
+     * @param int $attachment_id The attachment ID to check.
+     * @since 1.1.3
+     * @return bool True if the meta key exists and is not empty, false otherwise.
+     */
+    function failed_optimization_exist($attachment_id) {
+        // Get the meta value for the given meta key and attachment ID
+        $meta_value = get_post_meta($attachment_id, '_awp_io_optimization_failed_data', true);
+
+        // Check if the meta value exists and is not empty
+        if (!empty($meta_value)) {
+            return true; // Meta key exists and is not empty
+        }
+
+        return false; // Meta key does not exist or is empty
     }
 }
