@@ -232,6 +232,14 @@ input[type=radio] {
     opacity: 1;
 }
 
+.bg-color-orange{
+    background: #FF7F50;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 20px;
+}
+
 /*Meida column list for tooltip*/
 /* Tooltip container */
 .awp-tooltip {

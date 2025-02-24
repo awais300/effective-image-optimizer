@@ -24,7 +24,7 @@ class Bootstrap
      *
      * @var string
      */
-    private $version = '1.1.2';
+    private $version = '1.1.3';
 
     /**
      * Singleton instance of the plugin.

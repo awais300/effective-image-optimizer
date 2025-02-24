@@ -131,7 +131,6 @@ class MediaLibraryOptimizer
         $html = '<div class="optimization-controls" data-id="' . esc_attr($post->ID) . '">';
 
         if ($is_optimized) {
-
             if ($this->tracker->backup_exists($post->ID)) {
                 $html .= '<button type="button" class="button restore-image">' .
                     esc_html__('Restore Original', 'awp-io') .
@@ -143,6 +142,14 @@ class MediaLibraryOptimizer
                 esc_html__('ReOptimize Image', 'awp-io') .
                 '<span class="spinner"></span>' .
                 '</button>';
+
+            // Display error if any.
+            if ($failed_message = $this->failed_optimization_exist($post->ID)) {
+                $html .= '<span class="tooltip">
+                            <span class="tooltip-icon bg-color-orange">!</span>
+                            <span class="tooltip-text">' . $failed_message . '</span>
+                        </span>';
+            }
 
             if ($optimization_data) {
                 $html .= '<div class="optimization-stats">' .
@@ -245,13 +252,20 @@ class MediaLibraryOptimizer
         <div class="optimization-controls" data-id="<?php echo esc_attr($attachment_id); ?>">
             <?php if ($is_optimized) : ?>
 
+                <?php // Display error if any ?>
+                <?php if ($failed_message = $this->failed_optimization_exist($attachment_id)): ?>
+                    <span class="tooltip">
+                        <span class="tooltip-icon bg-color-orange">!</span>
+                        <span class="tooltip-text"><?php echo $failed_message ?></span>
+                    </span>
+                <?php endif; ?>
+
                 <?php if ($this->tracker->backup_exists($attachment_id)): ?>
                     <button class="button restore-image">
                         <?php _e('Restore Original', 'awp-io'); ?>
                         <span class="spinner"></span>
                     </button>
                 <?php endif; ?>
-
 
                 <button class="button reoptimize-image">
                     <?php _e('ReOptimize Image', 'awp-io'); ?>
@@ -486,15 +500,38 @@ class MediaLibraryOptimizer
      * @since 1.1.3
      * @return bool True if the meta key exists and is not empty, false otherwise.
      */
-    function failed_optimization_exist($attachment_id) {
+    public function failed_optimization_exist($attachment_id)
+    {
         // Get the meta value for the given meta key and attachment ID
         $meta_value = get_post_meta($attachment_id, '_awp_io_optimization_failed_data', true);
 
         // Check if the meta value exists and is not empty
         if (!empty($meta_value)) {
-            return true; // Meta key exists and is not empty
+            return $this->handle_failed_optimization_data($meta_value);
         }
 
         return false; // Meta key does not exist or is empty
+    }
+
+    /**
+     * Handle the failed optimization data and generate a formatted message.
+     *
+     * @param array $data The error data array.
+     * @since 1.1.3
+     * @return string
+     */
+    private function handle_failed_optimization_data($data)
+    {
+        $message = ''; // Initialize an empty message string
+
+        foreach ($data as $item) {
+            $error_message = $item['error']; // Get the error message
+            $image_type = $item['image']['type']; // Get the image type
+
+            // Concatenate the message with the desired format
+            $message .= "Image Type: {$image_type} - {$error_message}<br/>";
+        }
+
+        return $message;
     }
 }

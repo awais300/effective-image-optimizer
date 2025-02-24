@@ -6,7 +6,7 @@
  * Description: Optimize Images with Ease – Faster Sites, Better SEO, and Seamless Performance! Compress, convert, and resize effortlessly with just one click.
  * Author: AWP - Muhammad Awais
  * Author URI: https://awaiswp.is-a-fullstack.dev/contact/
- * Version: 1.1.2
+ * Version: 1.1.3
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * License: GPL-2.0+

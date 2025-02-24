@@ -1,5 +1,8 @@
 == Changelog ==
 
+= 1.1.3 =
+* Display any errors on the media listing page.
+
 = 1.1.2 =
 * Introduce Cloudflare integration: Updates the image on Cloudflare when optimizing or restoring an image.
 * Introduce retry mechanism for failed optimizations via WP CLI.
