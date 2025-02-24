@@ -1,3 +1,127 @@
+/* Nice alert*/
+//jQuery(document).ready(function($) {
+    // Function to show a beautiful alert
+    function showAlert(type, message) {
+        // Define styles for each alert type
+        // Types are: success, error, warning, notice
+        const alertStyles = {
+            success: {
+                backgroundColor: '#d4edda',
+                borderColor: '#c3e6cb',
+                textColor: '#155724',
+                icon: '✅'
+            },
+            error: {
+                backgroundColor: '#f8d7da',
+                borderColor: '#f5c6cb',
+                textColor: '#721c24',
+                icon: '❌'
+            },
+            warning: {
+                backgroundColor: '#fff3cd',
+                borderColor: '#ffeeba',
+                textColor: '#856404',
+                icon: '⚠️'
+            },
+            notice: {
+                backgroundColor: '#d1ecf1',
+                borderColor: '#bee5eb',
+                textColor: '#0c5460',
+                icon: 'ℹ️'
+            }
+        };
+
+        // Get the styles for the current alert type
+        const style = alertStyles[type] || alertStyles.notice; // Default to 'notice' if type is invalid
+
+        // Create the alert overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '1000';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s ease';
+        overlay.style.visibility = 'hidden';
+
+        // Create the alert box
+        const alertBox = document.createElement('div');
+        alertBox.style.backgroundColor = style.backgroundColor;
+        alertBox.style.padding = '20px';
+        alertBox.style.borderRadius = '8px';
+        alertBox.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+        alertBox.style.maxWidth = '400px';
+        alertBox.style.width = '100%';
+        alertBox.style.textAlign = 'center';
+        alertBox.style.position = 'relative';
+        alertBox.style.border = `1px solid ${style.borderColor}`;
+
+        // Add a close button
+        const closeButton = document.createElement('span');
+        closeButton.innerHTML = '&times;';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '10px';
+        closeButton.style.right = '10px';
+        closeButton.style.fontSize = '20px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.style.color = style.textColor;
+        closeButton.addEventListener('click', () => {
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+            setTimeout(() => document.body.removeChild(overlay), 300); // Remove after fade-out
+        });
+
+        // Add the icon and message
+        const iconElement = document.createElement('span');
+        iconElement.textContent = style.icon;
+        iconElement.style.marginRight = '10px';
+        iconElement.style.fontSize = '24px';
+
+        const messageElement = document.createElement('p');
+        messageElement.style.margin = '0';
+        messageElement.style.fontSize = '16px';
+        messageElement.style.color = style.textColor;
+        messageElement.style.display = 'flex';
+        messageElement.style.alignItems = 'center';
+        messageElement.style.justifyContent = 'center';
+
+        // Append the icon and text to the message element
+        messageElement.appendChild(iconElement);
+        messageElement.appendChild(document.createTextNode(message));
+
+        // Append elements to the alert box
+        alertBox.appendChild(closeButton);
+        alertBox.appendChild(messageElement);
+
+        // Append the alert box to the overlay
+        overlay.appendChild(alertBox);
+
+        // Append the overlay to the body
+        document.body.appendChild(overlay);
+
+        // Fade in the overlay
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+        }, 10);
+
+        // Close the alert when clicking outside the dialog
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.opacity = '0';
+                overlay.style.visibility = 'hidden';
+                setTimeout(() => document.body.removeChild(overlay), 300); // Remove after fade-out
+            }
+        });
+    }
+// });
+
 /*Tooltip*/
 (function($) {
     $(document).ready(function() {
@@ -285,11 +409,11 @@ jQuery(document).ready(function($) {
                         window.location.reload();
                     } else {
                         spinner_disable();
-                        alert(response.data.message || wpeio_data.i18n.error);
+                        showAlert('notice', response.data.message || wpeio_data.i18n.error);
                     }
                 },
                 error: function() {
-                    alert(wpeio_data.i18n.networkError);
+                    showAlert('notice', wpeio_data.i18n.networkError);
                     spinner_disable();
                 },
                 complete: function() {
@@ -546,126 +670,3 @@ jQuery(document).ready(function($) {
     setInterval(updateStats, 60000); // Update every 60 seconds
 });
 
-/* Nice alert*/
-jQuery(document).ready(function($) {
-    // Function to show a beautiful alert
-    function showAlert(type, message) {
-        // Define styles for each alert type
-        // Types are: success, error, warning, notice
-        const alertStyles = {
-            success: {
-                backgroundColor: '#d4edda',
-                borderColor: '#c3e6cb',
-                textColor: '#155724',
-                icon: '✅'
-            },
-            error: {
-                backgroundColor: '#f8d7da',
-                borderColor: '#f5c6cb',
-                textColor: '#721c24',
-                icon: '❌'
-            },
-            warning: {
-                backgroundColor: '#fff3cd',
-                borderColor: '#ffeeba',
-                textColor: '#856404',
-                icon: '⚠️'
-            },
-            notice: {
-                backgroundColor: '#d1ecf1',
-                borderColor: '#bee5eb',
-                textColor: '#0c5460',
-                icon: 'ℹ️'
-            }
-        };
-
-        // Get the styles for the current alert type
-        const style = alertStyles[type] || alertStyles.notice; // Default to 'notice' if type is invalid
-
-        // Create the alert overlay
-        const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        overlay.style.display = 'flex';
-        overlay.style.justifyContent = 'center';
-        overlay.style.alignItems = 'center';
-        overlay.style.zIndex = '1000';
-        overlay.style.opacity = '0';
-        overlay.style.transition = 'opacity 0.3s ease';
-        overlay.style.visibility = 'hidden';
-
-        // Create the alert box
-        const alertBox = document.createElement('div');
-        alertBox.style.backgroundColor = style.backgroundColor;
-        alertBox.style.padding = '20px';
-        alertBox.style.borderRadius = '8px';
-        alertBox.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
-        alertBox.style.maxWidth = '400px';
-        alertBox.style.width = '100%';
-        alertBox.style.textAlign = 'center';
-        alertBox.style.position = 'relative';
-        alertBox.style.border = `1px solid ${style.borderColor}`;
-
-        // Add a close button
-        const closeButton = document.createElement('span');
-        closeButton.innerHTML = '&times;';
-        closeButton.style.position = 'absolute';
-        closeButton.style.top = '10px';
-        closeButton.style.right = '10px';
-        closeButton.style.fontSize = '20px';
-        closeButton.style.cursor = 'pointer';
-        closeButton.style.color = style.textColor;
-        closeButton.addEventListener('click', () => {
-            overlay.style.opacity = '0';
-            overlay.style.visibility = 'hidden';
-            setTimeout(() => document.body.removeChild(overlay), 300); // Remove after fade-out
-        });
-
-        // Add the icon and message
-        const iconElement = document.createElement('span');
-        iconElement.textContent = style.icon;
-        iconElement.style.marginRight = '10px';
-        iconElement.style.fontSize = '24px';
-
-        const messageElement = document.createElement('p');
-        messageElement.style.margin = '0';
-        messageElement.style.fontSize = '16px';
-        messageElement.style.color = style.textColor;
-        messageElement.style.display = 'flex';
-        messageElement.style.alignItems = 'center';
-        messageElement.style.justifyContent = 'center';
-
-        // Append the icon and text to the message element
-        messageElement.appendChild(iconElement);
-        messageElement.appendChild(document.createTextNode(message));
-
-        // Append elements to the alert box
-        alertBox.appendChild(closeButton);
-        alertBox.appendChild(messageElement);
-
-        // Append the alert box to the overlay
-        overlay.appendChild(alertBox);
-
-        // Append the overlay to the body
-        document.body.appendChild(overlay);
-
-        // Fade in the overlay
-        setTimeout(() => {
-            overlay.style.opacity = '1';
-            overlay.style.visibility = 'visible';
-        }, 10);
-
-        // Close the alert when clicking outside the dialog
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.style.opacity = '0';
-                overlay.style.visibility = 'hidden';
-                setTimeout(() => document.body.removeChild(overlay), 300); // Remove after fade-out
-            }
-        });
-    }
-});
