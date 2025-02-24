@@ -213,9 +213,10 @@ class ImageOptimizerOptions extends Singleton
             return;
         }
 
-        if (!$this->sender->validate_api_key()) {
-            wp_send_json_error(['message' => __('Invalid API key', 'awp-io')]);
-            return;
+        try {
+            $this->sender->validate_api_key();
+        } catch (\Exception $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
         }
 
         // Check if re-optimization is enabled
