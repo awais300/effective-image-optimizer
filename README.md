@@ -10,9 +10,12 @@ A comprehensive WordPress plugin for intelligent image optimization, WebP conver
 - Optimization statistics tracking
 - WP-CLI integration
 - Bulk restore original images
+- Statistics Dashboard - Track savings and conversions
 - Automatic optimization on upload
+- Automatic conversion (PNG, JPG and GIF) to WebP before upload.
 - Next-gen image delivery
-- Image resizing and EXIF removal
+- Image EXIF removal
+- Image Resizing - Maintain aspect ratio (cover/contain)
 
 ## Core Components
 
@@ -58,6 +61,30 @@ A comprehensive WordPress plugin for intelligent image optimization, WebP conver
   - Progress bars
   - Batch size control
   - Re-optimization support
+  - Re-try failed optimizations support
+
+### WP-CLI Commands:
+WP-CLI Commands
+# Optimize all unprocessed images
+wp awp-io optimize --all
+
+# Optimize 50 images with verbose output
+wp awp-io optimize --batch-size=50 --verbose
+
+# Restore all optimized images
+wp awp-io restore --all
+
+# Re-optimize previously processed images
+wp awp-io optimize --all --re-optimize
+
+# Retry failed optimizations
+wp awp-io optimize --all --retry-failed-only
+
+### Cloudflare Integration
+**Namespace:** `AWP\IO`
+- Features:
+  - Update image on Cloudflare after image optimization.
+  - Update image on Cloudflare after image restore.
 
 ### Admin Interface (ImageOptimizerOptions)
 **Namespace:** `AWP\IO\Admin`
@@ -75,17 +102,35 @@ A comprehensive WordPress plugin for intelligent image optimization, WebP conver
    - **Parameters:**  
      `$attachment_id` (int), `$optimization_data` (array)  
    - **Description:**  
-     Triggered after an image optimization completes. Useful for tracking/extension
+     Triggered after an image optimization completes. Useful for tracking or extending functionality.
+
+2. **`awp_image_after_optimization_cleanup`**  
+   - **Parameters:**  
+     `$attachment_id` (int)  
+   - **Description:**  
+     Triggered after cleanup tasks are performed following image optimization. Useful for additional cleanup or logging.
 
 ### Filters
 1. **`awp_image_optimizer_excluded_thumbnails`**  
    - **Parameters:**  
      `$excluded_sizes` (array), `$attachment_id` (int)  
    - **Description:**  
-     Filter thumbnail sizes excluded from optimization
+     Filters thumbnail sizes excluded from optimization.
 
 2. **`awp_image_optimizer_attachment_images`**  
    - **Parameters:**  
      `$images` (array), `$attachment_id` (int)  
    - **Description:**  
-     Filter the list of images/sizes processed for an attachment
+     Filters the list of images/sizes processed for an attachment.
+
+3. **`awp_io_remote_url`**  
+   - **Parameters:**  
+     `$remote_url` (string)  
+   - **Description:**  
+     Filters the remote URL used for image optimization requests. Allows customization of the optimization server endpoint.
+
+4. **`awp_io_remote_url_validate_api`**  
+   - **Parameters:**  
+     `$validate_api_url` (string)  
+   - **Description:**  
+     Filters the remote URL used for validating the API key. Allows customization of the API key validation endpoint.
