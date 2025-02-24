@@ -92,15 +92,17 @@ class OptimizationManager extends Singleton
                     $images = $this->fetcher->get_attachment_images($attachment_id);
                     $optimization_results = $this->sender->send_images($attachment_id, $images);
 
-                    if (isset($optimization_results[0]['error'])) {
-                        //error_log("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
-                        /*return [
-                            'id' => $attachment_id,
-                            'status' => 'error',
-                            'message' => $optimization_results[0]['error']
-                        ];*/
 
-                        //throw new \Exception("Image optimization failed for ID {$attachment_id}: " . $optimization_results[0]['error']);
+                    $has_errors = false;
+                    foreach ($optimization_results as $result) {
+                        if (isset($result['error'])) {
+                            $results[] = [
+                                'id' => $attachment_id,
+                                'status' => 'error',
+                                'message' => $result['error'],
+                            ];
+                            $has_errors = true;
+                        }
                     }
 
                     // If backup already exist thene skip backup creation during re-optimization
@@ -120,11 +122,13 @@ class OptimizationManager extends Singleton
                         $this->tracker->track_processed_image_for_reoptimization($attachment_id);
                     }
 
-                    $results[] = [
-                        'id' => $attachment_id,
-                        'status' => 'success',
-                        'message' => 'Images optimized successfully',
-                    ];
+                    if (!$has_errors) {
+                        $results[] = [
+                            'id' => $attachment_id,
+                            'status' => 'success',
+                            'message' => 'Images optimized successfully',
+                        ];
+                    }
                 } catch (\Exception $e) {
                     $results[] = [
                         'id' => $attachment_id,
@@ -174,7 +178,7 @@ class OptimizationManager extends Singleton
      * @param int $reoptimize Whether attempt to re-optimize image or not 
      * @return array Optimization result containing status and message
      */
-    public function optimize_single_image($attachment_id, $re_optimize = false)
+    public function optimize_single_image_old($attachment_id, $re_optimize = false)
     {
         try {
             $images = $this->fetcher->get_attachment_images($attachment_id);
@@ -216,6 +220,71 @@ class OptimizationManager extends Singleton
     }
 
     /**
+     * Optimizes a single image from the media library.
+     *
+     * Processes a specific image attachment, handling optimization,
+     * WebP conversion, and metadata updates for the image and its thumbnails.
+     *
+     * @since 1.0.0
+     * @param int $attachment_id WordPress attachment ID to optimize
+     * @param bool $re_optimize Whether to attempt re-optimization of the image
+     * @return array Optimization result containing status and message
+     */
+    public function optimize_single_image($attachment_id, $re_optimize = false)
+    {
+        try {
+            $images = $this->fetcher->get_attachment_images($attachment_id);
+
+            // If backup already exists, skip backup creation during re-optimization
+            if ($re_optimize && $this->tracker->backup_exists($attachment_id) === false) {
+                $this->tracker->create_backup($attachment_id);
+            }
+
+            if (!$re_optimize) {
+                $this->tracker->create_backup($attachment_id);
+            }
+
+            $optimization_results = $this->sender->send_images($attachment_id, $images);
+
+            // Check for errors in optimization_results
+            $has_errors = false;
+            $error_message = '';
+
+            foreach ($optimization_results as $result) {
+                if (isset($result['error'])) {
+                    $has_errors = true;
+                    $error_message = "Image optimization failed for ID {$attachment_id}: " . $result['error'];
+                    error_log("Image optimization failed for ID {$attachment_id}: " . $result['error']);
+                }
+            }
+
+            // Process optimization results if no errors
+            $this->process_optimization_results($attachment_id, $optimization_results);
+
+            // If there are errors, return an error response
+            if ($has_errors) {
+                return [
+                    'id' => $attachment_id,
+                    'status' => 'error',
+                    'message' => $error_message,
+                ];
+            }
+
+            return [
+                'id' => $attachment_id,
+                'status' => 'success',
+                'message' => 'Image optimized successfully',
+            ];
+        } catch (\Exception $e) {
+            error_log("Image optimization failed for ID {$attachment_id}: " . $e->getMessage());
+            return [
+                'id' => $attachment_id,
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+    /**
      * Processes optimization results and updates image files and metadata.
      *
      * Handles the optimization results for an image and its thumbnails, including:
@@ -250,7 +319,7 @@ class OptimizationManager extends Singleton
 
         foreach ($results as $result) {
             $temp_result = $result;
-            
+
             unset($temp_result['optimized_content']);
             unset($temp_result['webp']['content']);
             $failed_results[] = $temp_result;

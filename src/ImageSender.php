@@ -42,7 +42,7 @@ class ImageSender extends Singleton
     public function __construct()
     {
         $this->remote_url = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/optimize';
-        
+
         $this->remote_url_validate_api = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/validate-api-key';
     }
 
@@ -78,7 +78,6 @@ class ImageSender extends Singleton
     public function send_images($attachment_id, $images)
     {
         $results = [];
-
         foreach ($images as $image) {
             try {
                 $result = $this->send_single_image($attachment_id, $image);
@@ -199,7 +198,7 @@ class ImageSender extends Singleton
 
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
-        
+
         //error_log('inSendSingleImage:', 3 , '/home/yousellcomics/public_html/adebug.log');
         //error_log(print_r($result, true), 3 , '/home/yousellcomics/public_html/adebug.log');
 
@@ -228,6 +227,13 @@ class ImageSender extends Singleton
      * @since 1.0.0
      * @return bool True if the API key is valid, false otherwise.
      */
+    /**
+     * Validate the API key by sending a test request to the remote server.
+     *
+     * @since 1.0.0
+     * @return array An array containing the success status and a message.
+     * @throws \Exception If the request fails or the API key is invalid.
+     */
     public function validate_api_key()
     {
         // Prepare the request payload
@@ -253,8 +259,9 @@ class ImageSender extends Singleton
 
         // Check for local WP_Error (e.g., network issues)
         if (is_wp_error($response)) {
-            error_log('API key validation failed: ' . $response->get_error_message());
-            return false;
+            $error_message = 'API key validation failed: ' . $response->get_error_message();
+            error_log($error_message);
+            throw new \Exception($error_message);
         }
 
         // Retrieve the response code and body
@@ -262,11 +269,23 @@ class ImageSender extends Singleton
         $response_body = wp_remote_retrieve_body($response);
         $response_data = json_decode($response_body, true);
 
-        // Check if the response is valid
-        if ($response_code === 200 && isset($response_data['success']) && $response_data['success'] === true) {
-            return true;
+        // Handle server-side errors (non-200 status codes)
+        if ($response_code !== 200) {
+            if (isset($response_data['code']) && isset($response_data['message'])) {
+                // This is a WP_Error converted to JSON
+                throw new \Exception('Request failed: ' . $response_data['message'] . ' (Code: ' . $response_data['code'] . ')');
+            } else {
+                // Handle generic HTTP errors
+                throw new \Exception('Request failed with status: ' . $response_code);
+            }
         }
 
-        return false;
+        // Check if the response indicates success
+        if (isset($response_data['success']) && $response_data['success'] === true) {
+            return ['success' => true, 'message' => $response_data['message'] ?? 'API key is valid'];
+        }
+
+        // Handle invalid API key or other issues
+        throw new \Exception($response_data['message'] ?? 'Invalid API key or unexpected response from the server');
     }
 }
