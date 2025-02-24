@@ -41,9 +41,9 @@ class ImageSender extends Singleton
      */
     public function __construct()
     {
-        $this->remote_url = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/optimize';
-
-        $this->remote_url_validate_api = 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/validate-api-key';
+        // Apply filters to allow modification of the remote URLs
+        $this->remote_url = apply_filters('awp_io_remote_url', 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/optimize');
+        $this->remote_url_validate_api = apply_filters('awp_io_remote_url_validate_api', 'https://ioserver.is-cool.dev/wp-json/awp-io/v1/validate-api-key');
     }
 
     /**
