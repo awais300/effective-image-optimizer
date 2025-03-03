@@ -47,19 +47,20 @@ class OptimizationManager extends Singleton
     private $processed_count = 0;
 
     /**
-     * Constructor. Initializes required service instances.
+     * Initializes required service instances.
      *
      * @since 1.0.0
      * @param ImageFetcher $fetcher Image fetcher service instance
      * @param ImageSender $sender Image sender service instance
      * @param ImageTracker $tracker Image tracker service instance
      */
-    public function __construct(ImageFetcher $fetcher, ImageSender $sender, ImageTracker $tracker)
+    public function initialize(ImageFetcher $fetcher, ImageSender $sender, ImageTracker $tracker)
     {
         $this->fetcher = $fetcher;
         $this->sender = $sender;
         $this->tracker = $tracker;
     }
+
 
     /**
      * Gets the count of processed images in current batch.
