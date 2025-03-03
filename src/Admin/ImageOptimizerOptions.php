@@ -31,7 +31,6 @@ class ImageOptimizerOptions extends Singleton
      * The template loader instance.
      *
      * @var TemplateLoader
-     * @since 1.0.0
      */
     private $loader = null;
 
@@ -39,7 +38,6 @@ class ImageOptimizerOptions extends Singleton
      * Image fetcher instance for retrieving images.
      *
      * @var ImageFetcher
-     * @since 1.0.0
      */
     private $fetcher;
 
@@ -47,7 +45,6 @@ class ImageOptimizerOptions extends Singleton
      * Image sender instance for processing images.
      *
      * @var ImageSender
-     * @since 1.0.0
      */
     private $sender;
 
@@ -55,7 +52,6 @@ class ImageOptimizerOptions extends Singleton
      * Image tracker instance for monitoring optimization status.
      *
      * @var ImageTracker
-     * @since 1.0.0
      */
     private $tracker;
 
@@ -63,7 +59,6 @@ class ImageOptimizerOptions extends Singleton
      * Optimization manager instance.
      *
      * @var OptimizationManager
-     * @since 1.0.0
      */
     private $optimization_manager;
 
@@ -71,7 +66,6 @@ class ImageOptimizerOptions extends Singleton
      * Option name for storing plugin settings in WordPress options table.
      *
      * @var string
-     * @since 1.0.0
      */
     private const IMAGE_OPTIMIZER_SETTINGS = 'wpeio_awp_settings';
 

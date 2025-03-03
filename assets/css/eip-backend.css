@@ -151,10 +151,6 @@ input[type=radio] {
     vertical-align: middle;
 }
 
-.optimization-controls.processing .spinner {
-    /*display: inline-block;*/
-}
-
 .optimization-controls button {
     margin-bottom: 5px !important;
 }
@@ -232,7 +228,7 @@ input[type=radio] {
     opacity: 1;
 }
 
-.bg-color-orange{
+.bg-color-orange {
     background: #FF7F50;
     width: 32px;
     height: 32px;

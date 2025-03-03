@@ -31,7 +31,7 @@ class Schema extends Singleton
      *
      * This method defines the structure of the optimization history table and creates it if it doesn't already exist.
      * The table stores statistics related to image optimizations, such as savings and conversions.
-     *
+     * @since 1.0.0
      * @return void
      */
     public function create_optimization_stats_table()
@@ -59,7 +59,7 @@ class Schema extends Singleton
 
     /**
      * Creates a database table for reoptimization records if it does not already exist.
-     * 
+     * @since 1.0.0
      * @return void
      */
     public function create_reoptimization_table()
@@ -83,6 +83,7 @@ class Schema extends Singleton
 
     /**
      * Truncates the reoptimization table by deleting all rows.
+     * @since 1.0.0
      */
     public function truncate_reoptimization_table()
     {

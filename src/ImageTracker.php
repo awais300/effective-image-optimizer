@@ -60,6 +60,7 @@ class ImageTracker extends Singleton
      *                                    'file_name'       => (string) Optimized image filename
      *                                    'converted_to_jpg' => (bool) Whether converted to JPG
      *                                ]
+     * @since 1.0.0
      * @return void
      */
     public function mark_as_optimized($attachment_id, $optimization_data)
@@ -298,6 +299,7 @@ class ImageTracker extends Singleton
     /**
      * Clean up optimization data, files, and meta for an attachment.
      *
+     * @since 1.0.0
      * @param int $attachment_id The ID of the attachment
      */
     private function cleanup_optimization_data($attachment_id)
@@ -320,6 +322,7 @@ class ImageTracker extends Singleton
     /**
      * Delete optimized files (.webp and converted .jpg) for an attachment.
      *
+     * @since 1.0.0
      * @param int $attachment_id The ID of the attachment
      */
     private function delete_optimized_files($attachment_id)
@@ -362,7 +365,7 @@ class ImageTracker extends Singleton
 
     /**
      * Track a processed image for reoptimization by inserting its ID into the database.
-     *
+     * @since 1.0.0
      * @param int $image_id The ID of the processed image to track for reoptimization.
      */
     public function track_processed_image_for_reoptimization($image_id)
@@ -379,6 +382,7 @@ class ImageTracker extends Singleton
      * Check if a backup file exists for a given attachment ID.
      *
      * @param int $attachment_id The ID of the attachment to check for backup.
+     * @since 1.0.0
      * @return bool True if backup file exists, false otherwise.
      */
     public function backup_exists($attachment_id)
@@ -402,6 +406,7 @@ class ImageTracker extends Singleton
      *
      * @param int $attachment_id The ID of the attachment to remove the meta data from.
      * @param array $optimization_data Additional data related to the optimization process (not used in this function).
+     * @since 1.0.0
      */
     public function remove_restore_attempt_meta($attachment_id, $optimization_data)
     {

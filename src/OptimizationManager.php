@@ -18,7 +18,6 @@ class OptimizationManager extends Singleton
      * Image fetcher service instance.
      *
      * @var ImageFetcher
-     * @since 1.0.0
      */
     private $fetcher;
 
@@ -26,7 +25,6 @@ class OptimizationManager extends Singleton
      * Image sender service instance.
      *
      * @var ImageSender
-     * @since 1.0.0
      */
     private $sender;
 
@@ -34,7 +32,6 @@ class OptimizationManager extends Singleton
      * Image tracker service instance.
      *
      * @var ImageTracker
-     * @since 1.0.0
      */
     private $tracker;
 
@@ -42,7 +39,6 @@ class OptimizationManager extends Singleton
      * Counter for processed images in current batch.
      *
      * @var int
-     * @since 1.0.0
      */
     private $processed_count = 0;
 

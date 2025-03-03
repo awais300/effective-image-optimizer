@@ -142,7 +142,7 @@ class Bootstrap
         CFCachePurger::get_instance();
 
         $setting_convert_to_webp_media_upload = $optimizer->get_optimizer_settings('convert_to_webp_media_upload');
-        if($setting_convert_to_webp_media_upload === 'yes') {
+        if ($setting_convert_to_webp_media_upload === 'yes') {
             new WebpUploadConverter();
         }
 

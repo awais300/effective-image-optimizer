@@ -127,7 +127,7 @@ class CFCachePurger extends Singleton
             $result = $this->purge_url($main_image_url);
         }
 
-        if($result && is_wp_error($result)) {
+        if ($result && is_wp_error($result)) {
             return;
         }
 

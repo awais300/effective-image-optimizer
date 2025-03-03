@@ -24,7 +24,6 @@ class ImageOptimizerCLI
      * Image fetcher service instance.
      *
      * @var ImageFetcher
-     * @since 1.0.0
      */
     private $fetcher;
 
@@ -32,7 +31,6 @@ class ImageOptimizerCLI
      * Image sender service instance.
      *
      * @var ImageSender
-     * @since 1.0.0
      */
     private $sender;
 
@@ -40,7 +38,6 @@ class ImageOptimizerCLI
      * Image tracker service instance.
      *
      * @var ImageTracker
-     * @since 1.0.0
      */
     private $tracker;
 
@@ -48,7 +45,6 @@ class ImageOptimizerCLI
      * Optimization manager instance.
      *
      * @var OptimizationManager
-     * @since 1.0.0
      */
     private $optimization_manager;
 
@@ -56,7 +52,6 @@ class ImageOptimizerCLI
      * Total bytes saved across all optimized images.
      *
      * @var int
-     * @since 1.0.0
      */
     private $total_saved_bytes = 0;
 
@@ -64,7 +59,6 @@ class ImageOptimizerCLI
      * Count of successfully processed images.
      *
      * @var int
-     * @since 1.0.0
      */
     private $processed_images = 0;
 
@@ -72,7 +66,6 @@ class ImageOptimizerCLI
      * Count of failed image optimizations.
      *
      * @var int
-     * @since 1.0.0
      */
     private $failed_images = 0;
 
@@ -80,14 +73,13 @@ class ImageOptimizerCLI
      * Whether to show detailed output for each image.
      *
      * @var bool
-     * @since 1.0.0
      */
     private $verbose = false;
 
     /**
      * Constructor. Initializes required service instances.
-     *
-     * @since 1.0.0
+     * 
+     * @var bool
      */
     public function __construct()
     {
@@ -324,7 +316,7 @@ class ImageOptimizerCLI
             if ($failed_count > 0) {
                 WP_CLI::confirm('Do you want to reset optimization data for these images and retry?', $assoc_args);
 
-                
+
                 // If the user confirms, reset the failed optimizations data
                 WP_CLI::log('Preparing...');
                 $this->optimization_manager->reset_failed_optimiztions_data();

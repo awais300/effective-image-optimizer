@@ -30,7 +30,6 @@ class MediaLibraryOptimizer extends Singleton
      * Image sender instance for processing images.
      *
      * @var ImageSender
-     * @since 1.0.0
      */
     private $sender;
 
@@ -38,7 +37,6 @@ class MediaLibraryOptimizer extends Singleton
      * Image tracker instance for monitoring optimization status.
      *
      * @var ImageTracker
-     * @since 1.0.0
      */
     private $tracker;
 
@@ -46,14 +44,12 @@ class MediaLibraryOptimizer extends Singleton
      * Optimization manager instance.
      *
      * @var OptimizationManager
-     * @since 1.0.0
      */
     private $optimization_manager;
 
     /**
      * Constructor. Sets up WordPress hooks for media library integration.
      *
-     * @since 1.0.0
      */
     public function __construct()
     {
