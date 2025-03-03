@@ -54,36 +54,11 @@ abstract class Singleton
     /**
      * Returns the singleton instance of the class.
      * 
-     * This method supports constructor parameters for the first initialization
-     * but throws an exception if parameters are provided after initialization.
-     * 
-     * @since 1.0.0
-     * @access public
-     * @static
-     * @param mixed ...$params Optional parameters for first initialization
-     * @return static The singleton instance
-     * @throws \Exception If parameters provided after initialization
-     */
-    public static function get_instance(...$params)
-    {
-        $class = static::class;
-        if (!isset(self::$instances[$class])) {
-            self::$instances[$class] = new $class(...$params); // Parameters used only once
-        } else if (!empty($params)) {
-            throw new \Exception("Singleton already initialized. Additional parameters are not allowed.");
-        }
-        return self::$instances[$class];
-    }
-
-    /**
-     * Legacy method for getting singleton instance.
-     * 
-     * @deprecated since 1.0.0 Use get_instance() instead
      * @access public
      * @static
      * @return static The singleton instance
      */
-    public static function get_instance_old()
+    public static function get_instance()
     {
         $cls = get_called_class(); // late-static-bound class name
         if (!isset(self::$instances[$cls])) {
@@ -94,12 +69,12 @@ abstract class Singleton
     }
 
     /**
-     * Hook method called after instance construction in get_instance_old().
+     * Hook method called after instance construction in get_instance().
      * 
-     * @deprecated since 1.0.0 Used only by get_instance_old()
+     * @deprecated since 1.0.0 Used only by get_instance()
      * @access public
      */
-    function on_construct() {}
+    public function on_construct() {}
 
     /**
      * Alias for get_instance().
