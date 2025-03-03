@@ -24,6 +24,13 @@ class ImageTracker extends Singleton
     private $db;
 
     /**
+     * A static property to track restoration state
+     *
+     * @var \wpdb
+     */
+    private static $is_restoring_image = false;
+
+    /**
      * Constructor.
      *
      * Initializes the database connection and sets up hooks for attachment deletion.
@@ -206,6 +213,9 @@ class ImageTracker extends Singleton
      */
     public function restore_image($attachment_id)
     {
+        // Set the restoration state to true
+        self::$is_restoring_image = true;
+
         $relative_backup_path = get_post_meta($attachment_id, '_awp_io_backup_path', true);
         $uploads_dir = wp_upload_dir();
 
@@ -227,12 +237,29 @@ class ImageTracker extends Singleton
             $metadata = wp_generate_attachment_metadata($attachment_id, $current_path);
             wp_update_attachment_metadata($attachment_id, $metadata);
 
+            // Set the restoration state back to false
+            self::$is_restoring_image = false;
+
             return true;
         }
         // Attempt to restore, this will allow to not to include this attachment repeatedly in query while doing the bulk restore.
         update_post_meta($attachment_id, '_awp_io_restore_attempt', '1');
         return false;
     }
+
+
+    /**
+     * Checks if an image is currently being restored.
+     *
+     * This method returns the status of the image restoration process.
+     * @since 1.1.6
+     * @return bool True if an image is being restored, false otherwise.
+     */
+    public static function is_restoring_image()
+    {
+        return self::$is_restoring_image;
+    }
+
 
     /**
      * Delete backup image when an attachment is deleted.
@@ -282,6 +309,7 @@ class ImageTracker extends Singleton
         delete_post_meta($attachment_id, '_awp_io_optimized');
         delete_post_meta($attachment_id, '_awp_io_optimization_data');
         delete_post_meta($attachment_id, '_awp_io_backup_path');
+        delete_post_meta($attachment_id, '_awp_io_optimization_failed_data');
 
         // Clean up stats
         (OptimizationStatsManager::get_instance())->remove_stats_for_attachment($attachment_id);
