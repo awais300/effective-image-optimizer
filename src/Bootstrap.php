@@ -24,7 +24,7 @@ class Bootstrap
      *
      * @var string
      */
-    private $version = '1.1.3';
+    private $version = '1.1.6';
 
     /**
      * Singleton instance of the plugin.
@@ -104,7 +104,7 @@ class Bootstrap
     public function init_hooks()
     {
         add_action('init', array($this, 'load_textdomain'));
-        add_action('init', array($this, 'init'), 1);
+        add_action('init', array($this, 'init'), 20);
 
         add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -139,14 +139,14 @@ class Bootstrap
         $optimizer = ImageOptimizerOptions::get_instance();
         $optimizer->initialize_hooks();
 
-        new CFCachePurger(true);
+        //CFCachePurger::get_instance();
 
         $setting_convert_to_webp_media_upload = $optimizer->get_optimizer_settings('convert_to_webp_media_upload');
         if($setting_convert_to_webp_media_upload === 'yes') {
             new WebpUploadConverter();
         }
 
-        new MediaLibraryOptimizer();
+        MediaLibraryOptimizer::get_instance();
         OptimizationStatsManager::get_instance();
         BulkRestore::get_instance();
 
