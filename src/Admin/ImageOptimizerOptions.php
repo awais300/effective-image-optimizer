@@ -235,7 +235,8 @@ class ImageOptimizerOptions extends Singleton
             return;
         }
 
-        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+        $this->optimization_manager = OptimizationManager::get_instance();
+        $this->optimization_manager->initialize($this->fetcher, $this->sender, $this->tracker);
 
         // Process current batch
         $results = $this->optimization_manager->optimize_batch($re_optimize);

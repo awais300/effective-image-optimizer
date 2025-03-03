@@ -95,6 +95,9 @@ class ImageOptimizerCLI
         $this->fetcher = ImageFetcher::get_instance();
         $this->sender = ImageSender::get_instance();
         $this->tracker = ImageTracker::get_instance();
+
+        $this->optimization_manager = OptimizationManager::get_instance();
+        $this->optimization_manager->initialize($this->fetcher, $this->sender, $this->tracker);
     }
 
     /**
@@ -302,7 +305,6 @@ class ImageOptimizerCLI
      */
     public function optimize($args, $assoc_args)
     {
-        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
         // If no arguments provided, show help
         if (empty($assoc_args)) {
             WP_CLI::runcommand('help awp-io optimize');
