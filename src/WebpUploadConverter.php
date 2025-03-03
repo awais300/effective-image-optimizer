@@ -29,57 +29,49 @@ class WebpUploadConverter
      */
     public function __construct()
     {
-        add_filter('wp_handle_upload_prefilter', array($this, 'convert_to_webp_before_upload'));
+        // Direct hook into WordPress's file handling
+        add_filter('wp_check_filetype_and_ext', array($this, 'intercept_file_checks'), 10, 5);
     }
 
     /**
-     * Convert the uploaded image to WebP format before it is saved to the server.
+     * Intercept file type checks to modify files before they're processed
      *
-     * This method is hooked into the `wp_handle_upload_prefilter` filter. It checks if the uploaded file
-     * is an image and converts it to WebP format if it is not already in that format.
-     *
-     * @param array $file An array of file data.
-     * @return array The modified file data.
+     * @param array $wp_check_filetype_and_ext File data including type information
+     * @param string $file Full path to the file
+     * @param string $filename The name of the file
+     * @param array $mimes Array of allowed mime types
+     * @param string $real_mime Real mime type of the file
+     * @since 1.0.0
+     * @return array Modified file data
      */
-    public function convert_to_webp_before_upload($file)
+    public function intercept_file_checks($wp_check_filetype_and_ext, $file, $filename, $mimes, $real_mime = null)
     {
-        // Skip if already a WebP image or unsupported type
-        if ($file['type'] === 'image/webp' || !in_array($file['type'], $this->supported_types)) {
-            return $file;
+        // Only process supported image types
+        if (!in_array($real_mime, $this->supported_types)) {
+            return $wp_check_filetype_and_ext;
         }
 
-        // Check if it's an image
-        if (strpos($file['type'], 'image/') !== 0) {
-            return $file;
+        // Skip if already webp
+        if ($real_mime === 'image/webp') {
+            return $wp_check_filetype_and_ext;
         }
 
-        // Get file information
-        $path_info = pathinfo($file['name']);
-        if (!isset($path_info['extension'])) {
-            return $file;
-        }
+        // Create a temporary WebP version
+        $webp_temp = $file . '.webp';
 
-        // Create a copy of the temp file for conversion
-        $temp_file = $file['tmp_name'];
-        $webp_temp = $temp_file . '.webp';
+        if ($this->convert_to_webp($file, $webp_temp)) {
+            // Replace the original file with the WebP version
+            if (copy($webp_temp, $file)) {
+                @unlink($webp_temp);
 
-        // Convert to WebP
-        if ($this->convert_to_webp($temp_file, $webp_temp)) {
-            // Update the temporary file
-            if (!copy($webp_temp, $temp_file)) {
-                error_log('Failed to copy WebP file: ' . $webp_temp);
-                return $file;
+                // Update file information
+                $wp_check_filetype_and_ext['type'] = 'image/webp';
+                $wp_check_filetype_and_ext['ext'] = 'webp';
+                $wp_check_filetype_and_ext['proper_filename'] = pathinfo($filename, PATHINFO_FILENAME) . '.webp';
             }
-            if (!unlink($webp_temp)) {
-                error_log('Failed to delete temporary WebP file: ' . $webp_temp);
-            }
-
-            // Update file information
-            $file['type'] = 'image/webp';
-            $file['name'] = $path_info['filename'] . '.webp';
         }
 
-        return $file;
+        return $wp_check_filetype_and_ext;
     }
 
     /**
@@ -90,6 +82,7 @@ class WebpUploadConverter
      *
      * @param string $source_path The path to the source image.
      * @param string $dest_path The path to save the converted WebP image.
+     * @since 1.0.0
      * @return bool True if the conversion was successful, false otherwise.
      */
     private function convert_to_webp($source_path, $dest_path)
