@@ -16,7 +16,7 @@ namespace AWP\IO;
  * @package AWP\IO
  * @since 1.0.0
  */
-class MediaLibraryOptimizer
+class MediaLibraryOptimizer extends Singleton
 {
     /**
      * Image fetcher instance for retrieving images.
@@ -71,7 +71,7 @@ class MediaLibraryOptimizer
 
         // Add media modal integration
         add_filter('attachment_fields_to_edit', [$this, 'add_optimization_fields'], 10, 2);
-        add_action('add_attachment', [$this, 'optimize_on_new_upload']);
+        add_filter('wp_generate_attachment_metadata', [$this, 'optimize_on_new_upload'], 10, 3);
     }
 
     /**
@@ -79,21 +79,27 @@ class MediaLibraryOptimizer
      *
      * @since 1.0.0
      * @param int $attachment_id The ID of the newly uploaded attachment
-     * @return void
+     * @return array
      */
-    public function optimize_on_new_upload($attachment_id)
+    public function optimize_on_new_upload($metadata, $attachment_id, $context)
     {
+        // Skip optimization if the image is being restored
+        if (ImageTracker::is_restoring_image()) {
+            return $metadata;
+        }
+
         $setting_optimize_media_upload = get_optimizer_settings('optimize_media_upload');
 
         if ($setting_optimize_media_upload === 'no') {
-            return;
+            return $metadata;
         }
         // Check if it's an image
         if (!wp_attachment_is_image($attachment_id)) {
-            return;
+            return $metadata;
         }
 
-        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+        $this->optimization_manager = OptimizationManager::get_instance();
+        $this->optimization_manager->initialize($this->fetcher, $this->sender, $this->tracker);
 
         // You could add this to a queue instead of processing immediately
         $result = $this->optimization_manager->optimize_single_image($attachment_id);
@@ -102,6 +108,8 @@ class MediaLibraryOptimizer
             // Handle error (maybe add to failed queue, notify admin, etc.)
             error_log("Auto-optimization failed for ID {$attachment_id}: " . $result['message']);
         }
+
+        return $metadata;
     }
 
 
@@ -252,7 +260,8 @@ class MediaLibraryOptimizer
         <div class="optimization-controls" data-id="<?php echo esc_attr($attachment_id); ?>">
             <?php if ($is_optimized) : ?>
 
-                <?php // Display error if any ?>
+                <?php // Display error if any 
+                ?>
                 <?php if ($failed_message = $this->failed_optimization_exist($attachment_id)): ?>
                     <span class="tooltip">
                         <span class="tooltip-icon bg-color-orange">!</span>
@@ -446,7 +455,9 @@ class MediaLibraryOptimizer
             return;
         }
 
-        $this->optimization_manager = OptimizationManager::get_instance($this->fetcher, $this->sender, $this->tracker);
+        $this->optimization_manager = OptimizationManager::get_instance();
+        $this->optimization_manager->initialize($this->fetcher, $this->sender, $this->tracker);
+
         $result = $this->optimization_manager->optimize_single_image($attachment_id, $re_optimize);
 
         if ($result['status'] === 'success') {
