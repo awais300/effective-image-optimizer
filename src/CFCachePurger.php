@@ -12,7 +12,7 @@ use WP_Error;
  * @package AWP\IO
  * @since 1.1.2
  */
-class CFCachePurger
+class CFCachePurger extends Singleton
 {
     /**
      * API token for CDN authentication.
@@ -41,9 +41,9 @@ class CFCachePurger
      * @param bool $log_enabled Whether to enable logging.
      * @since 1.1.2
      */
-    public function __construct($log_enabled = true)
+    protected function __construct()
     {
-        $this->log_enabled = $log_enabled;
+        $this->log_enabled = true;
         $this->zone_id = null;
         $this->api_token = null;
 
@@ -121,9 +121,14 @@ class CFCachePurger
         }
 
         // Get the main image URL
+        $result = null;
         $main_image_url = wp_get_attachment_url($attachment_id);
         if ($main_image_url) {
-            $this->purge_url($main_image_url);
+            $result = $this->purge_url($main_image_url);
+        }
+
+        if($result && is_wp_error($result)) {
+            return;
         }
 
         // Get and purge all image sizes
