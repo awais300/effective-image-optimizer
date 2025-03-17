@@ -1,5 +1,8 @@
 == Changelog ==
 
+= 1.1.7 =
+* Add plugin updater
+
 = 1.1.6 =
 * Fix Image restore
 * Fix optimization of thumbnails on upload 
