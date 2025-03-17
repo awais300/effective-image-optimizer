@@ -6,7 +6,7 @@
  * Description: Optimize Images with Ease – Faster Sites, Better SEO, and Seamless Performance! Compress, convert, and resize effortlessly with just one click.
  * Author: AWP - Muhammad Awais
  * Author URI: https://awaiswp.is-a-fullstack.dev/contact/
- * Version: 1.1.6
+ * Version: 1.1.7
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * License: GPL-2.0+
@@ -27,7 +27,6 @@
  *
  * @package AWP\IO
  * @author Muhammad Awais
- * @version 1.0.0
  */
 
 namespace AWP\IO;
@@ -44,6 +43,14 @@ if (! defined('EIP_CUST_PLUGIN_FILE')) {
 // Autoload plugin classes
 require_once 'vendor/autoload.php';
 
+// Initialize the update checker
+new UpdateChecker(
+    __FILE__,
+    'https://ioserver.is-cool.dev/awp/updater/?action=get_metadata&slug=effective-image-optimizer',
+    'effective-image-optimizer'
+);
+
+
 // Initialize the plugin
 Bootstrap::get_instance();
 
@@ -53,7 +60,6 @@ Bootstrap::get_instance();
 function effective_image_optimizer_on_activate()
 {
     $schema = Schema::get_instance();
-
     $schema->create_optimization_stats_table();
     $schema->create_reoptimization_table();
 }

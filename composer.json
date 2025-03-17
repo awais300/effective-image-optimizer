@@ -11,6 +11,7 @@
             "includes/functions.php"
         ]
     },
-    "require-dev":
-    {}
+    "require": {
+        "yahnis-elsts/plugin-update-checker": "^5.5"
+    }
 }
