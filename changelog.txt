@@ -1,11 +1,15 @@
 == Changelog ==
 
+= 1.1.8
+* Improved error handling for invalid image source structures.
+* Remove extra debugging function.
+
 = 1.1.7 =
-* Add plugin updater
+* Add plugin updater.
 
 = 1.1.6 =
-* Fix Image restore
-* Fix optimization of thumbnails on upload 
+* Fix Image restore.
+* Fix optimization of thumbnails on upload.
 * Fix image optimization and conversion during the WooCommerce import. 
 
 = 1.1.3 =

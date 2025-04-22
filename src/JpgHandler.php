@@ -130,6 +130,11 @@ class JpgHandler
      */
     public function modify_image_srcset($sources, $size_array, $image_src, $image_meta, $attachment_id)
     {
+        // Return early if sources is not an array
+        if (!is_array($sources)) {
+            return $sources;
+        }
+
         foreach ($sources as $width => $source) {
             // Only process PNG images
             if (preg_match('/\.(png|PNG)$/i', $source['url'])) {

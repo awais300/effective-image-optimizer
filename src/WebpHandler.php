@@ -183,6 +183,11 @@ class WebpHandler
             return $sources;
         }
 
+        // Return early if sources is not an array
+        if (!is_array($sources)) {
+            return $sources;
+        }
+
         foreach ($sources as $width => $source) {
             $webp_url = $this->get_webp_version($source['url']);
             if ($webp_url) {

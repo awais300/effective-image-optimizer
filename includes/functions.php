@@ -40,29 +40,3 @@ function get_default_optimizer_settings()
     $optimizer = ImageOptimizerOptions::get_instance();
     return $optimizer->get_default_optimizer_settings();
 }
-
-/**
- * Debug function to print variables.
- * 
- * Outputs variable content in a readable format, either to the
- * screen or to the error log.
- *
- * @since 1.0.0
- * @param mixed $mix The variable to debug
- * @param bool $log Whether to write to error log instead of screen output
- */
-if (!function_exists('dd')) {
-    function dd($mix, $log = 0)
-    {
-        if ($log == false) {
-            echo "<pre>";
-            print_r($mix);
-            echo "</pre>";
-        }
-
-        if ($log == true) {
-            error_log('WriteLog:');
-            error_log(print_r($mix, 1));
-        }
-    }
-}
