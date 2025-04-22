@@ -347,16 +347,22 @@ class OptimizationManager extends Singleton
                     // Update main image dimensions & filesize
                     $metadata['width'] = $result['dimensions']['width'];
                     $metadata['height'] = $result['dimensions']['height'];
-                    $metadata['filesize'] = $result['optimized_size'];
+                    //$metadata['filesize'] = $result['optimized_size'];
                 } else if ($result['image_type'] === 'original') {;
                 } else if (isset($metadata['sizes'][$result['image_size']])) {
                     // Handle thumbnails
                     $metadata['sizes'][$result['image_size']]['width'] = $result['dimensions']['width'];
                     $metadata['sizes'][$result['image_size']]['height'] = $result['dimensions']['height'];
-                    $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
+                    //$metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
                 }
             }
 
+            // Always update filesize, even if dimensions are not set
+            if ($result['image_type'] === 'full') {
+                $metadata['filesize'] = $result['optimized_size'];
+            } else if (isset($metadata['sizes'][$result['image_size']])) {
+                $metadata['sizes'][$result['image_size']]['filesize'] = $result['optimized_size'];
+            }
             // Handle WebP version if it exists
             if (isset($result['webp'])) {
                 $size_data['webp'] = [

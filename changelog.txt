@@ -3,6 +3,7 @@
 = 1.1.8
 * Improved error handling for invalid image source structures.
 * Remove extra debugging function.
+* Fix filesize when dimensions are not set.
 
 = 1.1.7 =
 * Add plugin updater.
