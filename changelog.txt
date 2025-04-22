@@ -4,6 +4,7 @@
 * Improved error handling for invalid image source structures.
 * Remove extra debugging function.
 * Fix filesize when dimensions are not set.
+* Introduce hook to include original image for optimization.
 
 = 1.1.7 =
 * Add plugin updater.
