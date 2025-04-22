@@ -367,8 +367,10 @@ class ImageFetcher extends Singleton
             'type' => 'full'
         ];
 
-        // Add original image only if it's different from the full-sized image
-        if ($original_path && $original_path !== $full_path) {
+        // Add original image only if:
+        // 1. It exists and is different from full-sized
+        // 2. A filter explicitly allows it (default: false)
+        if ($original_path && $original_path !== $full_path && apply_filters('awp_io_include_original_image', false, $attachment_id)) {
             $images[] = [
                 'path' => $original_path,
                 'type' => 'original'
